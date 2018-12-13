@@ -5,20 +5,23 @@ require_once '../functions/Repositories/BooksRepository.php';
 require_once '../functions/Repositories/AuthorsBooksRepository.php';
 
 if (!isAdmin()){
-    redirectTo(APP_BASE_URL.'/dashboard');
+    redirectTo(APP_URL_BASE.'/dashboard');
 }
 /* @var Book $book */
 if (isset($_GET['book_id'])) {
     $id = $_GET['book_id'];
     $repo = new BooksRepository();
-    $book = $repo->findById($id)[0];
+    if(!($book = $repo->findById($id))){
+        redirectTo(APP_URL_BASE . '/books/browse.php');
+    }
 } else {
-    redirectTo(APP_BASE_URL . '/books/browse.php');
+    redirectTo(APP_URL_BASE . '/books/browse.php');
 }
+alertBox();
 ?>
-    <div class="ui container">
+    <div class="ui placeholder segment">
         <form id="ui_form" class="ui form" method="POST" action="../functions/Validators/BookValidator.php"
-              enctype="multipart/form-data" style="background-color:#f7f7f7">
+              enctype="multipart/form-data">
 
             <!--first row-->
             <div class="fields">
@@ -45,9 +48,9 @@ if (isset($_GET['book_id'])) {
                             class="ui search fluid dropdown authors">
                         <?php
                         $repo = new AuthorsBooksRepository();
-                        $arr = $repo->findAuthors($book->getId());
-                        foreach ($arr as $dtos) {
-                            echo '<option selected value="' . $dtos[0]->getName() . '">' . $dtos[0]->getName() . '</option>';
+                        $arr = $repo->findFirst($book->getId());
+                        foreach ($arr as $author) {
+                            echo '<option selected value="' . $author->getName() . '">' . $author->getName() . '</option>';
                         }
                         ?>
                     </select>
@@ -199,22 +202,21 @@ if (isset($_GET['book_id'])) {
                     <div class="form-group">
                         <label for="cover_photo">Cover Photo *</label>
                         <input id="cover_photo" name="cover_photo" type="file">
-                        <p class="help-block">Max Dimension : 1200 X 2000
-                            Max Size : 1024KB Format : jpg,png.</p>
+                        <p class="help-block">Format : jpg,png.</p>
                     </div>
                 </div>
                 <div class="six wide field" style="text-align: center">
                     <div class="form-group">
                         <label for="eBook">eBook</label>
                         <input id="eBook" name="eBook" type="file">
-                        <p class="help-block">Portable Document File</p>
+                        <p class="help-block">PDF</p>
                     </div>
                 </div>
             </div>
 
             <div class="ui two column centered grid">
                 <input name="id" type="hidden" value="<?php echo $book->getId() ?>">
-                <button id="save_book" name="save_book" type="button" class="btn btn-primary">Save</button>
+                <button id="save_book" name="save_book" type="button" class="ui button blue">Save</button>
             </div>
         </form>
     </div>

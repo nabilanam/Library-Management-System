@@ -2,13 +2,12 @@
 require_once __DIR__ . '/../Models/DTO.php';
 require_once __DIR__ . '/../Models/Book.php';
 require_once 'Repository.php';
+require_once 'Pagination.php';
 require_once 'AuthorsBooksRepository.php';
 require_once 'SimpleRepositoryFacade.php';
 
-class BooksRepository implements Repository
+class BooksRepository extends Repository implements Pagination
 {
-    private $db;
-    private $table;
     private $categories_repo;
     private $conditions_repo;
     private $publishers_repo;
@@ -17,8 +16,7 @@ class BooksRepository implements Repository
 
     public function __construct()
     {
-        $this->db = Database::getInstance();
-        $this->table = 'books';
+        parent::__construct('books');
         $this->categories_repo = SimpleRepositoryFacade::getCategoriesRepository();
         $this->conditions_repo = SimpleRepositoryFacade::getConditionsRepository();
         $this->publishers_repo = SimpleRepositoryFacade::getPublishersRepository();
@@ -71,10 +69,10 @@ class BooksRepository implements Repository
      * @param $id
      * @return bool
      */
-    public function remove($id)
+    public function removeById($id)
     {
         /* @var Book $book */
-        $book = $this->findById($id)[0];
+        $book = $this->findById($id);
         if (file_exists($book->getCoverPath())) {
             unlink($book->getCoverPath());
         }
@@ -87,14 +85,9 @@ class BooksRepository implements Repository
         return $result->rowCount() == 1;
     }
 
-    public function find($book)
-    {
-        // TODO: Implement find() method.
-    }
-
     /**
      * @param $id
-     * @return array Book
+     * @return Book|bool
      */
     public function findById($id)
     {
@@ -115,10 +108,18 @@ class BooksRepository implements Repository
                 WHERE bk.id=:id";
         $result = $this->db->bindQuery($query, ['id' => $id]);
 
-        return $this->getBooksArray($result);
+        $arr = $this->getBooksArray($result);
+        if (count($arr) == 1) {
+            return $arr[0];
+        }
+        return false;
     }
 
-    public function findByCategory($id)
+    /**
+     * @param $id
+     * @return Book[]
+     */
+    public function findByCategoryPaginated($id, $to, $limit)
     {
         $query = "SELECT bk.id, bk.shelves_id, bk.publishers_id, bk.sources_id, bk.conditions_id, bk.categories_id,
                 bk.isbn, bk.title, bk.subtitle, bk.edition, bk.edition_year, bk.publication_year, bk.total_pages, 
@@ -134,13 +135,18 @@ class BooksRepository implements Repository
                 INNER JOIN book_publishers bp on bk.publishers_id = bp.id 
                 INNER JOIN book_shelves bsh on bk.shelves_id = bsh.id 
                 INNER JOIN book_sources bsr on bk.sources_id = bsr.id 
-                WHERE bct.id=:id";
+                WHERE bct.id=:id
+                LIMIT $to, $limit";
         $result = $this->db->bindQuery($query, ['id' => $id]);
 
         return $this->getBooksArray($result);
     }
 
-    public function findByShelf($id)
+    /**
+     * @param $id
+     * @return Book[]
+     */
+    public function findByShelfPaginated($id, $to, $limit)
     {
         $query = "SELECT bk.id, bk.shelves_id, bk.publishers_id, bk.sources_id, bk.conditions_id, bk.categories_id,
                 bk.isbn, bk.title, bk.subtitle, bk.edition, bk.edition_year, bk.publication_year, bk.total_pages, 
@@ -156,15 +162,11 @@ class BooksRepository implements Repository
                 INNER JOIN book_publishers bp on bk.publishers_id = bp.id 
                 INNER JOIN book_shelves bsh on bk.shelves_id = bsh.id 
                 INNER JOIN book_sources bsr on bk.sources_id = bsr.id 
-                WHERE bsh.id=:id";
+                WHERE bsh.id=:id
+                LIMIT $to, $limit";
         $result = $this->db->bindQuery($query, ['id' => $id]);
 
         return $this->getBooksArray($result);
-    }
-
-    public function findOrInsert($book)
-    {
-        // TODO: Implement findOrUpdate() method.
     }
 
     /**
@@ -218,30 +220,128 @@ class BooksRepository implements Repository
     }
 
     /**
-     * @return array Book
+     * @return Book[]
      */
     public function getAll()
     {
-        $query = "SELECT bk.id, bk.shelves_id, bk.publishers_id, bk.sources_id, bk.conditions_id, bk.categories_id,"
-            . " bk.isbn, bk.title, bk.subtitle, bk.edition, bk.edition_year, bk.publication_year, bk.total_pages,"
-            . " bk.total_copies, bk.available_copies, bk.price, bk.note, bk.cover_path, bk.ebook_path,"
-            . " bct.name categories_name, bcn.name conditions_name, bp.name publishers_name, bsh.name shelves_name, bsr.name sources_name"
-            . " FROM $this->table bk"
-            . " INNER JOIN book_categories bct ON bk.categories_id = bct.id"
-            . " INNER JOIN book_conditions bcn on bk.conditions_id = bcn.id"
-            . " INNER JOIN book_publishers bp on bk.publishers_id = bp.id"
-            . " INNER JOIN book_shelves bsh on bk.shelves_id = bsh.id"
-            . " INNER JOIN book_sources bsr on bk.sources_id = bsr.id";
+        $query = "SELECT bk.id, bk.shelves_id, bk.publishers_id, bk.sources_id, bk.conditions_id, bk.categories_id,
+            bk.isbn, bk.title, bk.subtitle, bk.edition, bk.edition_year, bk.publication_year, bk.total_pages,
+            bk.total_copies, bk.available_copies, bk.price, bk.note, bk.cover_path, bk.ebook_path,
+            bct.name categories_name, bcn.name conditions_name, bp.name publishers_name, bsh.name shelves_name, bsr.name sources_name
+            FROM $this->table bk
+            INNER JOIN book_categories bct ON bk.categories_id = bct.id
+            INNER JOIN book_conditions bcn on bk.conditions_id = bcn.id
+            INNER JOIN book_publishers bp on bk.publishers_id = bp.id
+            INNER JOIN book_shelves bsh on bk.shelves_id = bsh.id
+            INNER JOIN book_sources bsr on bk.sources_id = bsr.id";
         $result = $this->db->query($query);
 
         return $this->getBooksArray($result);
     }
 
-    public function getNextAutoIncrement()
+    /**
+     * @param $to
+     * @param $limit
+     * @return Book[]
+     */
+    public function getPaginated($to, $limit)
     {
-        return $this->db->getNextAutoIncrement($this->table);
+        $query = "SELECT bk.id, bk.shelves_id, bk.publishers_id, bk.sources_id, bk.conditions_id, bk.categories_id,
+            bk.isbn, bk.title, bk.subtitle, bk.edition, bk.edition_year, bk.publication_year, bk.total_pages,
+            bk.total_copies, bk.available_copies, bk.price, bk.note, bk.cover_path, bk.ebook_path,
+            bct.name categories_name, bcn.name conditions_name, bp.name publishers_name, bsh.name shelves_name, bsr.name sources_name
+            FROM $this->table bk
+            INNER JOIN book_categories bct ON bk.categories_id = bct.id
+            INNER JOIN book_conditions bcn on bk.conditions_id = bcn.id
+            INNER JOIN book_publishers bp on bk.publishers_id = bp.id
+            INNER JOIN book_shelves bsh on bk.shelves_id = bsh.id
+            INNER JOIN book_sources bsr on bk.sources_id = bsr.id
+            ORDER BY bk.id ASC
+            LIMIT $to, $limit";
+        $result = $this->db->query($query);
+
+        return $this->getBooksArray($result);
     }
 
+    public function getPaginatedTitleSearch($search, $to, $limit)
+    {
+        $query = "SELECT bk.id, bk.shelves_id, bk.publishers_id, bk.sources_id, bk.conditions_id, bk.categories_id,
+            bk.isbn, bk.title, bk.subtitle, bk.edition, bk.edition_year, bk.publication_year, bk.total_pages,
+            bk.total_copies, bk.available_copies, bk.price, bk.note, bk.cover_path, bk.ebook_path,
+            bct.name categories_name, bcn.name conditions_name, bp.name publishers_name, bsh.name shelves_name, bsr.name sources_name
+            FROM $this->table bk
+            INNER JOIN book_categories bct ON bk.categories_id = bct.id
+            INNER JOIN book_conditions bcn on bk.conditions_id = bcn.id
+            INNER JOIN book_publishers bp on bk.publishers_id = bp.id
+            INNER JOIN book_shelves bsh on bk.shelves_id = bsh.id
+            INNER JOIN book_sources bsr on bk.sources_id = bsr.id
+            WHERE bk.title
+            LIKE '%$search%'
+            ORDER BY bk.id, bk.title
+            LIMIT $to, $limit";
+        $result = $this->db->query($query);
+
+        return $this->getBooksArray($result);
+    }
+
+    public function getPaginatedPublisherSearch($search, $to, $limit)
+    {
+        $query = "SELECT bk.id, bk.shelves_id, bk.publishers_id, bk.sources_id, bk.conditions_id, bk.categories_id,
+            bk.isbn, bk.title, bk.subtitle, bk.edition, bk.edition_year, bk.publication_year, bk.total_pages,
+            bk.total_copies, bk.available_copies, bk.price, bk.note, bk.cover_path, bk.ebook_path,
+            bct.name categories_name, bcn.name conditions_name, bp.name publishers_name, bsh.name shelves_name, bsr.name sources_name
+            FROM $this->table bk
+            INNER JOIN book_categories bct ON bk.categories_id = bct.id
+            INNER JOIN book_conditions bcn on bk.conditions_id = bcn.id
+            INNER JOIN book_publishers bp on bk.publishers_id = bp.id
+            INNER JOIN book_shelves bsh on bk.shelves_id = bsh.id
+            INNER JOIN book_sources bsr on bk.sources_id = bsr.id
+            WHERE bp.name
+            LIKE '%$search%'
+            ORDER BY bk.id, bk.title
+            LIMIT $to, $limit";
+        $result = $this->db->query($query);
+
+        return $this->getBooksArray($result);
+    }
+
+    public function totalPublisherSearchRecords($search)
+    {
+        $query = "SELECT COUNT(*) FROM $this->table
+                  INNER JOIN book_publishers bp on publishers_id = bp.id
+                  WHERE bp.name
+                  LIKE '%$search%'";
+        $result = $this->db->query($query);
+        return $result->fetchColumn();
+    }
+
+    public function totalTitleSearchRecords($search)
+    {
+        $query = "SELECT COUNT(*) c FROM $this->table
+                  WHERE title LIKE '%$search%'";
+        $result = $this->db->query($query);
+        return $result->fetchColumn();
+    }
+
+    public function totalRecordsByCategory($id)
+    {
+        $query = "SELECT COUNT(*) FROM $this->table
+                  WHERE categories_id=:id";
+        $result = $this->db->bindQuery($query,['id'=>$id]);
+        return $result->fetchColumn();
+    }
+
+    public function totalRecordsByShelf($id)
+    {
+        $query = "SELECT COUNT(*) FROM $this->table
+                  WHERE shelves_id=:id";
+        $result = $this->db->bindQuery($query,['id'=>$id]);
+        return $result->fetchColumn();
+    }
+
+    /* @param PDOStatement $result
+     * @return Book[]
+     */
     private function getBooksArray($result)
     {
         $arr = [];

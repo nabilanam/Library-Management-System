@@ -5,7 +5,7 @@ require_once __DIR__ . '/../Repositories/UsersRepository.php';
 function redirectIfNotLoggedIn()
 {
     if (!isset($_SESSION['user_id'])) {
-        redirectTo(APP_BASE_URL . '/auth/login.php');
+        redirectTo(APP_URL_BASE . '/auth/login.php');
     }
 }
 
@@ -54,6 +54,8 @@ function getHashedPassword($password)
  */
 function setAlert($message, $type)
 {
+    if ($type == 'success') $type = 'positive';
+    if ($type == 'danger') $type = 'negative';
     $_SESSION['alert'] = $message;
     $_SESSION['alert_type'] = $type;
 }
@@ -61,11 +63,10 @@ function setAlert($message, $type)
 function alertBox()
 {
     if (isset($_SESSION['alert']) && isset($_SESSION['alert_type'])) {
-        echo '<div class="text-center alert alert-' . $_SESSION['alert_type'] . '" role="alert">'
-            . $_SESSION['alert']
-            . '<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-               </button></div>';
+        echo '<div class="ui '.$_SESSION['alert_type'].' message">'
+                .$_SESSION['alert']
+                .'<i class="close icon"></i>
+              </div>';
         unset($_SESSION['alert']);
         unset($_SESSION['alert_type']);
     }
@@ -76,9 +77,67 @@ function isAdmin()
     return $_SESSION['user_type'] == 'Admin';
 }
 
-function get_unique_token()
+function getUniqueToken()
 {
     return md5(uniqid(mt_rand(), true));
 }
 
+function getToday(){
+    return date('Y-m-d');
+}
+
+/**
+ * @param string $subtrahend
+ * @param string $minuend
+ * @return float|int
+ */
+function subtractDays($minuend, $subtrahend){
+
+    if ($subtrahend == null){
+        $subtrahend = new DateTime();
+    }else{
+        $subtrahend = new DateTime($subtrahend);
+    }
+
+    if ($minuend == null){
+        $minuend = new DateTime();
+    }else{
+        $minuend = new DateTime($minuend);
+    }
+
+    return (int)$subtrahend->diff($minuend)->format("%r%a");
+}
+
+function printPagination($current_page, $total_pages, $url)
+{
+    $span = 2;
+    $items = '<div class="ui pagination menu">';
+    if ($total_pages > 1 && $current_page <= $total_pages) {
+        if (1 == $current_page){
+            $items = $items . '<a class="item active" href="'.$url.'page=1">1</a>';
+        } else{
+            $items = $items . '<a class="item" href="'.$url.'page=1">1</a>';
+        }
+        $i = max(2, $current_page - $span);
+        if ($i > 2)
+            $items = $items . '<div class="item"> ... </div>';
+        for (; $i < min($current_page + $span + 1, $total_pages); $i++) {
+            if ($i == $current_page){
+                $items = $items . '<a class="item active" href="'.$url.'page='.$i.'">'.$i.'</a>';
+            } else{
+                $items = $items . '<a class="item" href="'.$url.'page='.$i.'">'.$i.'</a>';
+            }
+        }
+        if ($i != $total_pages)
+            $items = $items . '<div class="item"> ... </div>';
+        if ($total_pages == $current_page){
+            $items = $items . '<a class="item active" href="'.$url.'page='.$total_pages.'">'.$total_pages.'</a></div>';
+        }else{
+            $items = $items . '<a class="item" href="'.$url.'page='.$total_pages.'">'.$total_pages.'</a></div>';
+        }
+    }elseif($total_pages == 1){
+        $items = $items . '<a class="item active" href="'.$url.'page='.$total_pages.'">'.$total_pages.'</a></div>';
+    }
+    echo $items;
+}
 

@@ -52,18 +52,6 @@ final class Database
     }
 
     /**
-     * @param $table
-     * @return bool|string
-     */
-    public function getNextAutoIncrement($table)
-    {
-        $query = "SELECT `AUTO_INCREMENT` FROM  INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA=$this->db_name AND TABLE_NAME=$table";
-        $result = $this->query($query);
-        $row = $result->fetch(PDO::FETCH_ASSOC);
-        return $result->rowCount() == 1 ? $row['AUTO_INCREMENT'] : false;
-    }
-
-    /**
      * @return string
      */
     public function lastInsertId()
@@ -84,5 +72,13 @@ final class Database
     public function rollback()
     {
         return $this->conn->rollBack();
+    }
+
+    /**
+     * @return PDO
+     */
+    public function getConn(): PDO
+    {
+        return $this->conn;
     }
 }

@@ -1,20 +1,17 @@
 <?php
 require_once 'Repository.php';
 
-class UserTypesRepository implements Repository
+class UserTypesRepository extends Repository
 {
-    private $db;
-    private $table;
 
     public function __construct()
     {
-        $this->db = Database::getInstance();
-        $this->table = 'user_types';
+        parent::__construct('user_types');
     }
 
     /**
      * @param UserType $type
-     * @return bool
+     * @return false|UserType
      */
     public function add($type)
     {
@@ -26,21 +23,28 @@ class UserTypesRepository implements Repository
         ];
         $query = "INSERT INTO $this->table SET name=:name, book_limit=:book_limit, day_limit=:day_limit, fine_per_day=:fine_per_day";
         $result = $this->db->bindQuery($query,$data);
-        return $result->rowCount() == 1;
+        if($result->rowCount() == 1){
+            $type->setId($this->db->lastInsertId());
+            return $type;
+        }
+        return false;
     }
 
-    public function remove($id)
+    /**
+     * @param $id
+     * @return bool
+     */
+    public function removeById($id)
     {
         $query = "DELETE FROM $this->table WHERE id=:id";
         $result = $this->db->bindQuery($query,['id'=>$id]);
         return $result->rowCount() == 1;
     }
 
-    public function find($object)
-    {
-        // TODO: Implement find() method.
-    }
-
+    /**
+     * @param $id
+     * @return UserType|false
+     */
     public function findById($id)
     {
         $query = "SELECT * FROM $this->table WHERE id=:id";
@@ -50,17 +54,12 @@ class UserTypesRepository implements Repository
             $type = new UserType($row['id'],$row['name'],$row['book_limit'],$row['day_limit'],$row['fine_per_day']);
             $arr[] = $type;
         }
-        return $arr;
-    }
-
-    public function findOrInsert($object)
-    {
-        // TODO: Implement findOrInsert() method.
+        return count($arr) == 1 ? $arr[0] : false;
     }
 
     /**
      * @param UserType $type
-     * @return bool
+     * @return UserType|false
      */
     public function update($type)
     {
@@ -73,9 +72,12 @@ class UserTypesRepository implements Repository
         ];
         $query = "Update $this->table SET name=:name, book_limit=:book_limit, day_limit=:day_limit, fine_per_day=:fine_per_day WHERE id=:id";
         $result = $this->db->bindQuery($query,$data);
-        return $result->rowCount() == 1;
+        return $result->rowCount() == 1 ? $type : false;
     }
 
+    /**
+     * @return UserType[]
+     */
     public function getAll()
     {
         $query = "SELECT * FROM $this->table";
@@ -86,10 +88,5 @@ class UserTypesRepository implements Repository
             $arr[] = $type;
         }
         return $arr;
-    }
-
-    public function getNextAutoIncrement()
-    {
-        // TODO: Implement getNextAutoIncrement() method.
     }
 }

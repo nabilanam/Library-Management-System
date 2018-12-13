@@ -3,69 +3,73 @@ $page_title = 'Member View';
 require_once '../templates/navbar.php';
 require_once '../functions/Repositories/UsersRepository.php';
 
-if (!isAdmin()){
-    redirectTo(APP_BASE_URL.'/dashboard');
+if (!isAdmin()) {
+    redirectTo(APP_URL_BASE . '/dashboard');
 }
 
 /* @var User $user */
 if (isset($_GET['member_id'])) {
     $id = $_GET['member_id'];
     $repo = new UsersRepository();
-    $arr = $repo->findById($id);
-    if (count($arr) == 1){
-        $user = $arr[0];
+    $user = $repo->findById($id);
+    if ($user) {
         $details = $user->getUserDetails();
-    }else{
-        die('Book doesn\'t exist!');
+    } else {
+        setAlert('Member doesn\'t exist!','danger');
+        redirectTo(APP_URL_BASE . '/members/browse.php');
     }
 } else {
-    redirectTo(APP_BASE_URL . '/books/browse.php');
+    redirectTo(APP_URL_BASE . '/members/browse.php');
 }
 
 ?>
+    <div class="row">
+        <?php alertBox() ?>
+    </div>
 
-<div class="ui container text-center" style="">
-    <table class="table table-bordered" style="">
-        <tbody>
-        <tr>
-            <th scope="row" style="text-align: center">ID :</th>
-            <td colspan="2" style="text-align: center"><?php echo $user->getId(); ?></td>
-        </tr>
-        <tr>
-            <th scope="row" style="text-align: center">First Name :</th>
-            <td colspan="2" style="text-align: center"><?php echo $details->getFirstName(); ?></td>
-        </tr>
-        <tr>
-            <th scope="row" style="text-align: center">Last Name :</th>
-            <td colspan="2" style="text-align: center"><?php echo $details->getLastName(); ?></td>
-        </tr>
-        <tr>
-            <th scope="row" style="text-align: center">Membership:</th>
-            <td colspan="2" style="text-align: center"><?php echo $user->getUserType()->getName(); ?></td>
-        </tr>
-        <tr>
-            <th scope="row" style="text-align: center">Email :</th>
-            <td colspan="2" style="text-align: center"><?php echo $user->getEmail(); ?></td>
-        </tr>
-        <tr>
-            <th scope="row" style="text-align: center">User Type :</th>
-            <td colspan="2" style="text-align: center"><?php echo $user->getUserType()->getName(); ?></td>
-        </tr>
-        <tr>
-            <th scope="row" style="text-align: center">Mobile :</th>
-            <td colspan="2" style="text-align: center"><?php echo $details->getMobileNo(); ?></td>
-        </tr>
-        <tr>
-            <th scope="row" style="text-align: center">Present Address :</th>
-            <td colspan="2" style="text-align: center"><?php echo $details->getPresentAddress(); ?></td>
-        </tr>
-        <tr>
-            <th scope="row" style="text-align: center">Permanent Address :</th>
-            <td colspan="2" style="text-align: center"><?php echo $details->getPermanentAddress(); ?></td>
-        </tr>
-        </tbody>
-    </table>
-</div>
+    <div class="ui placeholder segment">
+        <table class="ui padded table celled striped selectable">
+            <tbody>
+            <tr>
+                <th>Photo :</th>
+                <td><img class="ui small rounded centered floated image"
+                         src="<?php echo APP_URL_PRO_PICS . '/' . $details->getProPic(); ?>" alt=""></td>
+            </tr>
+            <tr>
+                <th>ID :</th>
+                <td><?php echo $user->getId(); ?></td>
+            </tr>
+            <tr>
+                <th>First Name :</th>
+                <td><?php echo $details->getFirstName(); ?></td>
+            </tr>
+            <tr>
+                <th>Last Name :</th>
+                <td><?php echo $details->getLastName(); ?></td>
+            </tr>
+            <tr>
+                <th>Email :</th>
+                <td><?php echo $user->getEmail(); ?></td>
+            </tr>
+            <tr>
+                <th>User Type :</th>
+                <td><?php echo $user->getUserType()->getName(); ?></td>
+            </tr>
+            <tr>
+                <th>Mobile :</th>
+                <td><?php echo $details->getMobileNo(); ?></td>
+            </tr>
+            <tr>
+                <th>Present Address :</th>
+                <td><?php echo $details->getPresentAddress(); ?></td>
+            </tr>
+            <tr>
+                <th>Permanent Address :</th>
+                <td><?php echo $details->getPermanentAddress(); ?></td>
+            </tr>
+            </tbody>
+        </table>
 
+    </div>
 <?php
 require_once '../templates/footer.php';

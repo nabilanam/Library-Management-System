@@ -1,23 +1,30 @@
 <?php
 require_once '../functions/init.php';
 require_once '../functions/Repositories/UsersRepository.php';
-/* @var User $user */
+
 if (isset($_GET['id']) && isset($_GET['code'])) {
+
     $id = $_GET['id'];
     $code = $_GET['code'];
     $repo = new UsersRepository();
-    $arr = $repo->findById($id);
-    if (count($arr) == 1){
-        $user = $arr[0];
-        if ($code === $user->getValidationCode()){
-            $user->setActivated(1);
-            $user->setValidationCode(null);
-            if($repo->update($user)){
-                $_SESSION['activation'] = true;
-                setUser($user->getId(), $user->getUserDetails()->getFirstName(), $user->getUserType()->getName());
-                setAlert('Account activation successful! Create a password!','success');
-                redirectTo(APP_BASE_URL.'/auth/confirm_password.php');
-            }
-        }
+    $user = $repo->findById($id);
+    if (!$user) {
+        setAlert('User ID not found!','danger');
+        redirectTo(APP_URL_BASE.'/auth/login.php');
     }
+    if ($code !== $user->getValidationCode()) {
+        setAlert('Invalid code!','danger');
+        redirectTo(APP_URL_BASE.'/auth/login.php');
+    }
+    $user->setActivated(1);
+    $user->setValidationCode(null);
+    if ($user = $repo->update($user)) {
+        $_SESSION['id'] = $user->getId();
+        setUser($user->getId(), $user->getUserDetails()->getFirstName(), $user->getUserType()->getName());
+        setAlert('Account activation successful! Create a password!', 'success');
+        redirectTo(APP_URL_BASE . '/auth/confirm_password.php');
+    }
+
 }
+setAlert('Database error! Please try later!', 'danger');
+redirectTo(APP_URL_BASE . '/auth/login.php');

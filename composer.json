@@ -5,6 +5,7 @@
       "ext-pdo": "*",
       "ext-fileinfo": "*",
       "ext-ctype": "*",
-      "ext-json": "*"
+      "ext-json": "*",
+      "ext-spltype": "*"
     }
 }

@@ -5,7 +5,7 @@ require_once __DIR__."/../../vendor/autoload.php";
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-class Mail
+class Mailer
 {
     /* @var \PHPMailer\PHPMailer\PHPMailer*/
     private $mail;
@@ -23,7 +23,11 @@ class Mail
         $this->mail = new PHPMailer(true);
     }
 
-    public function send_email($address, $subject, $message)
+    /**
+     * @param Mail $mail
+     * @return bool
+     */
+    public function send($mail)
     {
         try {
             $this->mail->isSMTP();
@@ -35,11 +39,11 @@ class Mail
             $this->mail->Port = $this->port;
 
             $this->mail->setFrom($this->username, 'Library System');
-            $this->mail->addAddress($address);
+            $this->mail->addAddress($mail->getAddress());
 
             $this->mail->isHTML(true);
-            $this->mail->Subject = $subject;
-            $this->mail->Body = $message;
+            $this->mail->Subject = $mail->getSubject();
+            $this->mail->Body = $mail->getMessage();
 
             $this->mail->send();
             return true;

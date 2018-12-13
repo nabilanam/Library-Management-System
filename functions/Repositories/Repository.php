@@ -1,21 +1,31 @@
 <?php
 require_once __DIR__ . '/../init.php';
+require_once __DIR__ . '/../Utilities/Database.php';
 
-interface Repository
+abstract class Repository
 {
-    public function add($object);
+    protected $db;
+    protected $table;
 
-    public function remove($id);
+    public function __construct($table)
+    {
+        $this->db = Database::getInstance();
+        $this->table = $table;
+    }
 
-    public function find($object);
+    public abstract function add($object);
 
-    public function findById($id);
+    public abstract function removeById($id);
 
-    public function findOrInsert($object);
+    public abstract function findById($id);
 
-    public function update($object);
+    public abstract function update($object);
 
-    public function getAll();
+    public abstract function getAll();
 
-    public function getNextAutoIncrement();
+    public function totalRecords(){
+        $query = "SELECT COUNT(*) FROM $this->table";
+        $result = $this->db->query($query);
+        return $result->fetchColumn();
+    }
 }

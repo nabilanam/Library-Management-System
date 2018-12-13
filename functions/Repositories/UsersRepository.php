@@ -2,18 +2,16 @@
 require_once __DIR__ . '/../Models/DTO.php';
 require_once __DIR__ . '/../Models/User.php';
 require_once __DIR__ . '/../Models/UserType.php';
+require_once __DIR__ . '/../Enums/UserTypes.php';
 require_once __DIR__ . '/../Models/UserDetails.php';
 require_once 'Repository.php';
+require_once 'Pagination.php';
 require_once 'SimpleRepositoryFacade.php';
 require_once 'UserDetailsRepository.php';
 require_once 'UserTypesRepository.php';
 
-class UsersRepository implements Repository
+class UsersRepository extends Repository implements Pagination
 {
-
-    /* @var Database */
-    private $db;
-    private $table;
     private $user_details_repo;
 
     /**
@@ -21,8 +19,7 @@ class UsersRepository implements Repository
      */
     public function __construct()
     {
-        $this->db = Database::getInstance();
-        $this->table = 'users';
+        parent::__construct('users');
         $this->user_details_repo = new UserDetailsRepository();
     }
 
@@ -39,7 +36,10 @@ class UsersRepository implements Repository
             'validation_code' => $user->getValidationCode(),
             'activated' => $user->getActivated(),
         ];
-        $query = "INSERT INTO $this->table SET user_types_id=:user_types_id, user_details_id=:user_details_id, email=:email, password_hash=:password_hash, validation_code=:validation_code, activated=:activated";
+        $query = "INSERT INTO $this->table 
+                  SET user_types_id=:user_types_id, user_details_id=:user_details_id, 
+                  email=:email, password_hash=:password_hash, validation_code=:validation_code, 
+                  activated=:activated";
         $result = $this->db->bindQuery($query, $data);
         if ($result->rowCount() == 1) {
             $user->setId($this->db->lastInsertId());
@@ -48,29 +48,31 @@ class UsersRepository implements Repository
         return false;
     }
 
-    public function remove($id)
+    /**
+     * @param $id
+     * @return bool
+     */
+    public function removeById($id)
     {
         $query = "DELETE FROM $this->table WHERE id=:id";
         $result = $this->db->bindQuery($query, ['id' => $id]);
         return $result->rowCount() == 1;
     }
 
-    public function find($user)
-    {
-        // TODO: Implement find() method.
-    }
-
     /**
      * @param $id
-     * @return array User
+     * @return User|false
      */
     public function findById($id)
     {
         $query = "SELECT 
-                        u.id, u.user_types_id, u.user_details_id, u.email, u.password_hash, u.validation_code, u.activated, 
+                        u.id, u.user_types_id, u.user_details_id, u.email, 
+                        u.password_hash, u.validation_code, u.activated, 
                         ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
                         ug.id genders_id, ug.name genders_name, 
-                        ud.first_name, ud.last_name, ud.mobile_no, ud.present_address, ud.permanent_address
+                        ud.first_name, ud.last_name, ud.mobile_no, 
+                        ud.present_address, ud.permanent_address,
+                        ud.pro_pic 
                         FROM $this->table u 
                         INNER JOIN user_types ut ON ut.id = u.user_types_id 
                         INNER JOIN user_details ud on u.user_details_id = ud.id 
@@ -78,16 +80,27 @@ class UsersRepository implements Repository
                         WHERE u.id=:id";
         $result = $this->db->bindQuery($query, ['id' => $id]);
 
-        return $this->getUsersArray($result);
+        $arr = $this->getUsersArray($result);
+        if (count($arr) == 1) {
+            return $arr[0];
+        }
+        return false;
     }
 
+    /**
+     * @param $email
+     * @return User|false
+     */
     public function findByEmail($email)
     {
         $query = "SELECT 
-                        u.id, u.user_types_id, u.user_details_id, u.email, u.password_hash, u.validation_code, u.activated, 
+                        u.id, u.user_types_id, u.user_details_id, u.email, 
+                        u.password_hash, u.validation_code, u.activated, 
                         ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
                         ug.id genders_id, ug.name genders_name, 
-                        ud.first_name, ud.last_name, ud.mobile_no, ud.present_address, ud.permanent_address
+                        ud.first_name, ud.last_name, ud.mobile_no, 
+                        ud.present_address, ud.permanent_address,
+                        ud.pro_pic 
                         FROM $this->table u 
                         INNER JOIN user_types ut ON ut.id = u.user_types_id 
                         INNER JOIN user_details ud on u.user_details_id = ud.id 
@@ -95,23 +108,16 @@ class UsersRepository implements Repository
                         WHERE u.email=:email";
         $result = $this->db->bindQuery($query, ['email' => $email]);
 
-        return $this->getUsersArray($result);
-    }
-
-    public function findOrInsert($user)
-    {
-        // TODO: Implement findOrInsert() method.
+        $arr = $this->getUsersArray($result);
+        return count($arr) == 1 ? $arr[0] : false;
     }
 
     /**
      * @param User $user
-     * @return bool
+     * @return false|User
      */
     public function update($user)
     {
-        $this->db->beginTransaction();
-        $this->user_details_repo->update($user->getUserDetails());
-
         $data = [
             'id' => $user->getId(),
             'utype_id' => $user->getUserType()->getId(),
@@ -122,20 +128,28 @@ class UsersRepository implements Repository
             'activated' => $user->getActivated()
         ];
 
-        $query = "UPDATE $this->table SET user_types_id=:utype_id, user_details_id=:udetails_id, email=:email, password_hash=:phash, validation_code=:vcode, activated=:activated WHERE id=:id";
+        $query = "UPDATE $this->table 
+                  SET user_types_id=:utype_id, user_details_id=:udetails_id, email=:email, 
+                  password_hash=:phash, validation_code=:vcode, activated=:activated 
+                  WHERE id=:id";
         $result = $this->db->bindQuery($query, $data);
-        $this->db->commit();
 
-        return $result->rowCount() == 1;
+        return $result->rowCount() == 1 ? $user : false;
     }
 
+    /**
+     * @return User[]
+     */
     public function getAll()
     {
         $query = "SELECT 
-                        u.id, u.user_types_id, u.user_details_id, u.email, u.password_hash, u.validation_code, u.activated, 
+                        u.id, u.user_types_id, u.user_details_id, u.email, 
+                        u.password_hash, u.validation_code, u.activated, 
                         ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
                         ug.id genders_id, ug.name genders_name, 
-                        ud.first_name, ud.last_name, ud.mobile_no, ud.present_address, ud.permanent_address 
+                        ud.first_name, ud.last_name, ud.mobile_no, 
+                        ud.present_address, ud.permanent_address,
+                        ud.pro_pic 
                         FROM $this->table u 
                         INNER JOIN user_types ut ON ut.id = u.user_types_id 
                         INNER JOIN user_details ud on u.user_details_id = ud.id 
@@ -145,11 +159,94 @@ class UsersRepository implements Repository
         return $this->getUsersArray($result);
     }
 
-    public function getNextAutoIncrement()
+    /**
+     * @param $to
+     * @param $limit
+     * @return User[]
+     */
+    public function getPaginated($to, $limit)
     {
-        // TODO: Implement getNextAutoIncrement() method.
+        $query = "SELECT 
+                        u.id, u.user_types_id, u.user_details_id, u.email, 
+                        u.password_hash, u.validation_code, u.activated, 
+                        ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
+                        ug.id genders_id, ug.name genders_name, 
+                        ud.first_name, ud.last_name, ud.mobile_no, 
+                        ud.present_address, ud.permanent_address,
+                        ud.pro_pic 
+                        FROM $this->table u 
+                        INNER JOIN user_types ut ON ut.id = u.user_types_id 
+                        INNER JOIN user_details ud on u.user_details_id = ud.id 
+                        INNER JOIN user_genders ug on ud.genders_id = ug.id
+                        WHERE ut.id<>:ut_ins
+                        ORDER BY u.id ASC
+                        LIMIT $to, $limit";
+        $result = $this->db->bindQuery($query, ['ut_ins' => UserTypes::INSTITUTE]);
+
+        return $this->getUsersArray($result);
     }
 
+    /**
+     * @param $to
+     * @param $limit
+     * @return User[]
+     */
+    public function getInstitutesPaginated($to, $limit)
+    {
+        $query = "SELECT 
+                        u.id, u.user_types_id, u.user_details_id, u.email, 
+                        u.password_hash, u.validation_code, u.activated, 
+                        ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
+                        ug.id genders_id, ug.name genders_name, 
+                        ud.first_name, ud.last_name, ud.mobile_no, 
+                        ud.present_address, ud.permanent_address,
+                        ud.pro_pic 
+                        FROM $this->table u 
+                        INNER JOIN user_types ut ON ut.id = u.user_types_id 
+                        INNER JOIN user_details ud on ud.id = u.user_details_id
+                        INNER JOIN user_genders ug on ud.genders_id = ug.id 
+                        WHERE ut.id =:ut_ins
+                        ORDER BY u.id ASC 
+                        LIMIT $to, $limit";
+        $result = $this->db->bindQuery($query, ['ut_ins' => UserTypes::INSTITUTE]);
+
+        return $this->getUsersArray($result);
+    }
+
+    /**
+     * @return array
+     */
+    public function getAllIds()
+    {
+        $query = "SELECT id FROM $this->table";
+        $result = $this->db->query($query);
+        $arr = [];
+        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+            $arr[] = $row['id'];
+        }
+        return $arr;
+    }
+
+    public function totalNonInstituteRecords()
+    {
+        $query = "SELECT COUNT(*) FROM $this->table
+                  WHERE user_types_id<>:ut_inst";
+        $result = $this->db->bindQuery($query, ['ut_inst' => UserTypes::INSTITUTE]);
+        return $result->fetchColumn();
+    }
+
+    public function totalInstituteRecords()
+    {
+        $query = "SELECT COUNT(*) FROM $this->table
+                  WHERE user_types_id=:ut_inst";
+        $result = $this->db->bindQuery($query, ['ut_inst' => UserTypes::INSTITUTE]);
+        return $result->fetchColumn();
+    }
+
+    /**
+     * @param PDOStatement $result
+     * @return User[]
+     */
     private function getUsersArray($result)
     {
         $arr = [];
@@ -172,7 +269,8 @@ class UsersRepository implements Repository
                 $row['last_name'],
                 $row['mobile_no'],
                 $row['present_address'],
-                $row['permanent_address']
+                $row['permanent_address'],
+                $row['pro_pic']
             );
 
             $user = new User(
@@ -189,4 +287,209 @@ class UsersRepository implements Repository
         }
         return $arr;
     }
+
+    public function totalAllTypeSearchRecords($search)
+    {
+        $query = "SELECT COUNT(*) FROM $this->table
+                  INNER JOIN user_details ud ON ud.id = user_details_id 
+                  WHERE CONCAT(ud.first_name, ' ', ud.last_name)
+                  LIKE '%$search%'";
+        $result = $this->db->query($query);
+        return $result->fetchColumn();
+    }
+
+    public function totalPersonalSearchRecords($search)
+    {
+        $query = "SELECT COUNT(*) FROM $this->table
+                  INNER JOIN user_types ut ON ut.id =  user_types_id
+                  INNER JOIN user_details ud ON ud.id = user_details_id 
+                  WHERE ut.id = " . UserTypes::PERSONAL . " AND CONCAT(ud.first_name, ' ', ud.last_name)
+                  LIKE '%$search%'";
+        $result = $this->db->query($query);
+        return $result->fetchColumn();
+    }
+
+    public function totalStaffSearchRecords($search)
+    {
+        $query = "SELECT COUNT(*) FROM $this->table
+                  INNER JOIN user_types ut ON ut.id =  user_types_id
+                  INNER JOIN user_details ud ON ud.id = user_details_id 
+                  WHERE ut.id = " . UserTypes::STAFF . " AND CONCAT(ud.first_name, ' ', ud.last_name)
+                  LIKE '%$search%'";
+        $result = $this->db->query($query);
+        return $result->fetchColumn();
+    }
+
+    public function totalStudentSearchRecords($search)
+    {
+        $query = "SELECT COUNT(*) FROM $this->table
+                  INNER JOIN user_types ut ON ut.id =  user_types_id
+                  INNER JOIN user_details ud ON ud.id = user_details_id 
+                  WHERE ut.id = " . UserTypes::STUDENT . " AND CONCAT(ud.first_name, ' ', ud.last_name)
+                  LIKE '%$search%'";
+        $result = $this->db->query($query);
+        return $result->fetchColumn();
+    }
+
+    public function totalEducatorSearchRecords($search)
+    {
+        $query = "SELECT COUNT(*) FROM $this->table
+                  INNER JOIN user_types ut ON ut.id =  user_types_id
+                  INNER JOIN user_details ud ON ud.id = user_details_id 
+                  WHERE ut.id = " . UserTypes::EDUCATOR . " AND CONCAT(ud.first_name, ' ', ud.last_name)
+                  LIKE '%$search%'";
+        $result = $this->db->query($query);
+        return $result->fetchColumn();
+    }
+
+    public function totalInstituteSearchRecords($search)
+    {
+        $query = "SELECT COUNT(*) FROM $this->table
+                  INNER JOIN user_types ut ON ut.id =  user_types_id
+                  INNER JOIN user_details ud ON ud.id = user_details_id 
+                  WHERE ut.id = " . UserTypes::INSTITUTE . " AND ud.first_name
+                  LIKE '%$search%'";
+        $result = $this->db->query($query);
+        return $result->fetchColumn();
+    }
+
+    public function getPaginatedAllTypeSearch($search, $to, $limit)
+    {
+        $query = "SELECT 
+                        u.id, u.user_types_id, u.user_details_id, u.email, 
+                        u.password_hash, u.validation_code, u.activated, 
+                        ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
+                        ug.id genders_id, ug.name genders_name, 
+                        ud.first_name, ud.last_name, ud.mobile_no, 
+                        ud.present_address, ud.permanent_address,
+                        ud.pro_pic 
+                        FROM $this->table u 
+                        INNER JOIN user_types ut ON ut.id = u.user_types_id 
+                        INNER JOIN user_details ud on ud.id = u.user_details_id
+                        INNER JOIN user_genders ug on ud.genders_id = ug.id 
+                        WHERE CONCAT(ud.first_name, ' ', ud.last_name)
+                        LIKE '%$search%'
+                        ORDER BY ud.first_name, u.id
+                        LIMIT $to, $limit";
+        $result = $this->db->query($query);
+
+        return $this->getUsersArray($result);
+    }
+
+    public function getPaginatedPersonalSearch($search, $to, $limit)
+    {
+        $query = "SELECT 
+                        u.id, u.user_types_id, u.user_details_id, u.email, 
+                        u.password_hash, u.validation_code, u.activated, 
+                        ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
+                        ug.id genders_id, ug.name genders_name, 
+                        ud.first_name, ud.last_name, ud.mobile_no, 
+                        ud.present_address, ud.permanent_address,
+                        ud.pro_pic 
+                        FROM $this->table u 
+                        INNER JOIN user_types ut ON ut.id = u.user_types_id 
+                        INNER JOIN user_details ud on ud.id = u.user_details_id
+                        INNER JOIN user_genders ug on ud.genders_id = ug.id 
+                        WHERE ut.id =" . UserTypes::PERSONAL . " AND CONCAT(ud.first_name, ' ', ud.last_name)
+                        LIKE '%$search%'
+                        ORDER BY ud.first_name, u.id
+                        LIMIT $to, $limit";
+        $result = $this->db->query($query);
+
+        return $this->getUsersArray($result);
+    }
+
+    public function getPaginatedStaffSearch($search, $to, $limit)
+    {
+        $query = "SELECT 
+                        u.id, u.user_types_id, u.user_details_id, u.email, 
+                        u.password_hash, u.validation_code, u.activated, 
+                        ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
+                        ug.id genders_id, ug.name genders_name, 
+                        ud.first_name, ud.last_name, ud.mobile_no, 
+                        ud.present_address, ud.permanent_address,
+                        ud.pro_pic 
+                        FROM $this->table u 
+                        INNER JOIN user_types ut ON ut.id = u.user_types_id 
+                        INNER JOIN user_details ud on ud.id = u.user_details_id
+                        INNER JOIN user_genders ug on ud.genders_id = ug.id 
+                        WHERE ut.id =" . UserTypes::STAFF . " AND CONCAT(ud.first_name, ' ', ud.last_name)
+                        LIKE '%$search%'
+                        ORDER BY ud.first_name, u.id
+                        LIMIT $to, $limit";
+        $result = $this->db->query($query);
+
+        return $this->getUsersArray($result);
+    }
+
+    public function getPaginatedStudentSearch($search, $to, $limit)
+    {
+        $query = "SELECT 
+                        u.id, u.user_types_id, u.user_details_id, u.email, 
+                        u.password_hash, u.validation_code, u.activated, 
+                        ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
+                        ug.id genders_id, ug.name genders_name, 
+                        ud.first_name, ud.last_name, ud.mobile_no, 
+                        ud.present_address, ud.permanent_address,
+                        ud.pro_pic 
+                        FROM $this->table u 
+                        INNER JOIN user_types ut ON ut.id = u.user_types_id 
+                        INNER JOIN user_details ud on ud.id = u.user_details_id
+                        INNER JOIN user_genders ug on ud.genders_id = ug.id 
+                        WHERE ut.id =" . UserTypes::STUDENT . " AND CONCAT(ud.first_name, ' ', ud.last_name)
+                        LIKE '%$search%'
+                        ORDER BY ud.first_name, u.id
+                        LIMIT $to, $limit";
+        $result = $this->db->query($query);
+
+        return $this->getUsersArray($result);
+    }
+
+    public function getPaginatedEducatorSearch($search, $to, $limit)
+    {
+        $query = "SELECT 
+                        u.id, u.user_types_id, u.user_details_id, u.email, 
+                        u.password_hash, u.validation_code, u.activated, 
+                        ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
+                        ug.id genders_id, ug.name genders_name, 
+                        ud.first_name, ud.last_name, ud.mobile_no, 
+                        ud.present_address, ud.permanent_address,
+                        ud.pro_pic 
+                        FROM $this->table u 
+                        INNER JOIN user_types ut ON ut.id = u.user_types_id 
+                        INNER JOIN user_details ud on ud.id = u.user_details_id
+                        INNER JOIN user_genders ug on ud.genders_id = ug.id 
+                        WHERE ut.id =" . UserTypes::EDUCATOR . " AND CONCAT(ud.first_name, ' ', ud.last_name)
+                        LIKE '%$search%'
+                        ORDER BY ud.first_name, u.id
+                        LIMIT $to, $limit";
+        $result = $this->db->query($query);
+
+        return $this->getUsersArray($result);
+    }
+
+    public function getPaginatedInstituteSearch($search, $to, $limit)
+    {
+        $query = "SELECT 
+                        u.id, u.user_types_id, u.user_details_id, u.email, 
+                        u.password_hash, u.validation_code, u.activated, 
+                        ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
+                        ug.id genders_id, ug.name genders_name, 
+                        ud.first_name, ud.last_name, ud.mobile_no, 
+                        ud.present_address, ud.permanent_address,
+                        ud.pro_pic 
+                        FROM $this->table u 
+                        INNER JOIN user_types ut ON ut.id = u.user_types_id 
+                        INNER JOIN user_details ud on ud.id = u.user_details_id
+                        INNER JOIN user_genders ug on ud.genders_id = ug.id 
+                        WHERE ut.id =" . UserTypes::INSTITUTE . " AND ud.first_name
+                        LIKE '%$search%'
+                        ORDER BY ud.first_name, u.id
+                        LIMIT $to, $limit";
+        $result = $this->db->query($query);
+
+        return $this->getUsersArray($result);
+    }
+
+
 }

@@ -9,6 +9,7 @@ class UserDetails
     private $mobile_no;
     private $present_address;
     private $permanent_address;
+    private $pro_pic;
 
     /**
      * UserDetails constructor.
@@ -19,8 +20,9 @@ class UserDetails
      * @param string $mobile_no
      * @param string $present_address
      * @param string $permanent_address
+     * @param string $pro_pic
      */
-    public function __construct($id, $gender, $first_name, $last_name, $mobile_no, $present_address, $permanent_address)
+    public function __construct($id, $gender, $first_name, $last_name, $mobile_no, $present_address, $permanent_address, $pro_pic)
     {
         $this->id = $id;
         $this->gender = $gender;
@@ -29,6 +31,7 @@ class UserDetails
         $this->last_name = $last_name;
         $this->present_address = $present_address;
         $this->permanent_address = $permanent_address;
+        $this->pro_pic = $pro_pic;
     }
 
     /**
@@ -141,6 +144,22 @@ class UserDetails
     public function setPermanentAddress($permanent_address)
     {
         $this->permanent_address = $permanent_address;
+    }
+
+    /**
+     * @return string
+     */
+    public function getProPic()
+    {
+        return $this->pro_pic;
+    }
+
+    /**
+     * @param string $pro_pic
+     */
+    public function setProPic($pro_pic)
+    {
+        $this->pro_pic = $pro_pic;
     }
 
 }

@@ -1,38 +1,36 @@
 <?php
 require_once 'Repository.php';
 
-class SimpleRepository implements Repository
+class SimpleRepository extends Repository
 {
-    protected $db;
-    protected $table;
 
     public function __construct($table)
     {
-        $this->db = Database::getInstance();
-        $this->table = $table;
+        parent::__construct($table);
     }
 
-    /* @var DTO $dto
-     * @return DTO|bool
+    /**
+     * @param $name
+     * @return false|DTO
      */
-    public function add($dto)
+    public function add($name)
     {
         $data = [
-            'name' => $dto->getName()
+            'name' => $name
         ];
         $query = "INSERT INTO $this->table SET name=:name";
         $result = $this->db->bindQuery($query, $data);
         if ($result->rowCount() == 1) {
-            $dto->setId($this->db->lastInsertId());
-            return $dto;
+            return new DTO($this->db->lastInsertId(),$name);
         }
         return false;
     }
 
-    /* @var DTO $dto
+    /**
+     * @param $id
      * @return bool
      */
-    public function remove($id)
+    public function removeById($id)
     {
         $data = [
             'id' => $id
@@ -42,37 +40,9 @@ class SimpleRepository implements Repository
         return $result->rowCount() == 1;
     }
 
-    /* @var DTO $dto
-     * @return array
-     */
-    public function find($dto)
-    {
-        $data = [
-            'name' => $dto->getName()
-        ];
-        $query = "SELECT id,name FROM $this->table WHERE name=:name";
-        $result = $this->db->bindQuery($query, $data);
-        $arr = [];
-        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-            $arr[] = new DTO($row['id'], $row['name']);
-        }
-        return $arr;
-    }
-
-    /* @var DTO $dto
-     * @return DTO|bool
-     */
-    public function findOrInsert($dto)
-    {
-        if ($arr = $this->find($dto)) {
-            return $arr[0];
-        }
-        return $this->add($dto);
-    }
-
     /**
      * @param $id
-     * @return array DTO
+     * @return false|DTO
      */
     public function findById($id)
     {
@@ -82,11 +52,15 @@ class SimpleRepository implements Repository
         while ($row = $result->fetch(PDO::FETCH_NUM)) {
             $arr[] = new DTO($row[0], $row[1]);
         }
-        return $arr;
+        if (count($arr) == 1){
+            return $arr[0];
+        }
+        return false;
     }
 
-    /* @var DTO $dto
-     * @return bool
+    /**
+     * @param DTO $dto
+     * @return DTO|bool
      */
     public function update($dto)
     {
@@ -96,11 +70,11 @@ class SimpleRepository implements Repository
         ];
         $query = "UPDATE $this->table SET name=:name WHERE id=:id";
         $result = $this->db->bindQuery($query, $data);
-        return $result->rowCount() == 1;
+        return $result->rowCount() == 1 ? $dto : false;
     }
 
     /**
-     * @return array DTO
+     * @return DTO[]
      */
     public function getAll()
     {
@@ -113,8 +87,36 @@ class SimpleRepository implements Repository
         return $arr;
     }
 
-    public function getNextAutoIncrement()
+    /**
+     * @param $name
+     * @return false|DTO
+     */
+    public function findByName($name)
     {
-        return $this->db->getNextAutoIncrement($this->table);
+        $data = [
+            'name' => $name
+        ];
+        $query = "SELECT id,name FROM $this->table WHERE name=:name";
+        $result = $this->db->bindQuery($query, $data);
+        $arr = [];
+        while ($row = $result->fetch(PDO::FETCH_NUM)) {
+            $arr[] = new DTO($row[0], $row[1]);
+        }
+        if (count($arr) == 1){
+            return $arr[0];
+        }
+        return false;
+    }
+
+    /**
+     * @param $name
+     * @return DTO|false
+     */
+    public function findOrInsert($name)
+    {
+        if ($dto = $this->findByName($name)) {
+            return $dto;
+        }
+        return $this->add($name);
     }
 }

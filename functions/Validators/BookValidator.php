@@ -1,81 +1,101 @@
 <?php
+require_once 'Validator.php';
 require_once '../Models/DTO.php';
 require_once '../Models/Book.php';
 require_once '../Repositories/SimpleRepositoryFacade.php';
 require_once '../Repositories/BooksRepository.php';
 require_once '../Repositories/AuthorsBooksRepository.php';
 
-if (isset($_POST['save_book']) && getUser()['access'] == 'admin') {
-    $book = new Book();
+
+$conditions = [
+    'edition_year' => ['type' => 'int', 'min' => 3, 'max' => 4, 'optional' => false],
+    'publish_year' => ['type' => 'int', 'min' => 3, 'max' => 4, 'optional' => false],
+    'pages' => ['type' => 'int', 'min' => 1, 'max' => 4, 'optional' => false],
+    'copies' => ['type' => 'int', 'min' => 1, 'max' => 5, 'optional' => false],
+    'title' => ['type' => 'text', 'min' => 3, 'max' => 50, 'optional' => false],
+    'edition' => ['type' => 'text', 'min' => 1, 'max' => 50, 'optional' => false],
+    'shelf' => ['type' => 'text', 'min' => 1, 'max' => 50, 'optional' => false],
+    'source' => ['type' => 'text', 'min' => 3, 'max' => 50, 'optional' => false],
+    'condition' => ['type' => 'text', 'min' => 3, 'max' => 50, 'optional' => false],
+    'category' => ['type' => 'text', 'min' => 3, 'max' => 50, 'optional' => false],
+    'publisher' => ['type' => 'text', 'min' => 1, 'max' => 50, 'optional' => false],
+    'isbn' => ['type' => 'text', 'min' => 10, 'max' => 20, 'optional' => true],
+    'subtitle' => ['type' => 'text', 'min' => 3, 'max' => 100, 'optional' => true],
+    'note' => ['type' => 'text', 'min' => 3, 'max' => 200, 'optional' => true],
+    'price' => ['type' => 'currency', 'min' => 1, 'max' => 10, 'optional' => false],
+    'authors' => ['type' => 'text_arr', 'min' => 3, 'max' => 50, 'optional' => false]
+];
+
+if (isset($_POST['save_book']) && isAdmin()) {
     $db = Database::getInstance();
-    $validator = new BookValidator();
     $book_repo = new BooksRepository();
     $db->beginTransaction();
 
+    $book = new Book();
     try {
         /////// simple ///////
 
-        if ($validator->isPostValid('isbn')) {
+        if (isPostValid('isbn')) {
             $book->setIsbn($_POST['isbn']);
         }
-        if ($validator->isPostValid('subtitle')) {
+        if (isPostValid('subtitle')) {
             $book->setSubtitle($_POST['subtitle']);
         }
-        if ($validator->isPostValid('title')) {
+        if (isPostValid('title')) {
             $book->setTitle($_POST['title']);
         }
-        if ($validator->isPostValid('edition')) {
+        if (isPostValid('edition')) {
             $book->setEdition($_POST['edition']);
         }
-        if ($validator->isPostValid('edition_year')) {
+        if (isPostValid('edition_year')) {
             $book->setEditionYear((int)$_POST['edition_year']);
         }
-        if ($validator->isPostValid('publish_year')) {
+        if (isPostValid('publish_year')) {
             $book->setPublicationYear((int)$_POST['publish_year']);
         }
-        if ($validator->isPostValid('pages')) {
+        if (isPostValid('pages')) {
             $book->setTotalPages((int)$_POST['pages']);
         }
-        if ($validator->isPostValid('copies')) {
+        if (isPostValid('copies')) {
             $book->setTotalCopies((int)$_POST['copies']);
             $book->setAvailableCopies((int)$_POST['copies']);
         }
-        if ($validator->isPostValid('price')) {
+        if (isPostValid('price')) {
             $book->setPrice($_POST['price']);
         }
-        if ($validator->isPostValid('note')) {
+        if (isPostValid('note')) {
             $book->setNote($_POST['note']);
         }
 
         /////// dto ///////
 
-        if ($validator->isPostValid('shelf')) {
+        if (isPostValid('shelf')) {
             $authors_repo = SimpleRepositoryFacade::getShelvesRepository();
-            if ($dtos = $authors_repo->find(new DTO(null, $_POST['shelf']))) {
-                $book->setShelf($dtos[0]);
+            if ($dto = $authors_repo->findByName($_POST['shelf'])) {
+                $book->setShelf($dto);
             }
         }
-        if ($validator->isPostValid('source')) {
+        if (isPostValid('source')) {
             $authors_repo = SimpleRepositoryFacade::getSourcesRepository();
-            if ($dtos = $authors_repo->find(new DTO(null, $_POST['source']))) {
-                $book->setSource($dtos[0]);
+            if ($dto = $authors_repo->findByName($_POST['source'])) {
+                $book->setSource($dto);
             }
         }
-        if ($validator->isPostValid('condition')) {
+        if (isPostValid('condition')) {
             $authors_repo = SimpleRepositoryFacade::getConditionsRepository();
-            if ($dtos = $authors_repo->find(new DTO(null, $_POST['condition']))) {
-                $book->setCondition($dtos[0]);
+            if ($dto = $authors_repo->findByName($_POST['condition'])) {
+                $book->setCondition($dto);
             }
         }
-        if ($validator->isPostValid('category')) {
+        if (isPostValid('category')) {
             $authors_repo = SimpleRepositoryFacade::getCategoriesRepository();
-            if ($dtos = $authors_repo->find(new DTO(null, $_POST['category']))) {
-                $book->setCategory($dtos[0]);
+            if ($dto = $authors_repo->findByName($_POST['category'])) {
+                $book->setCategory($dto);
             }
         }
-        if ($validator->isPostValid('publisher')) {
+        if (isPostValid('publisher')) {
             $authors_repo = SimpleRepositoryFacade::getPublishersRepository();
-            if ($dto = $authors_repo->findOrInsert(new DTO(null, $_POST['publisher']))) {
+            if ($dto = $authors_repo->findOrInsert($_POST['publisher'])) {
                 $book->setPublisher($dto);
             }
         }
@@ -84,14 +104,14 @@ if (isset($_POST['save_book']) && getUser()['access'] == 'admin') {
 
         $cover = $_FILES['cover_photo'];
         if ($cover['error'] == UPLOAD_ERR_OK) {
-            if ($cover_path = $validator->uploadImage($cover)) {
+            if ($cover_path = uploadImage($cover)) {
                 $book->setCoverPath($cover_path);
             }
         }
 
         $ebook = $_FILES['eBook'];
         if ($ebook['error'] == UPLOAD_ERR_OK) {
-            if ($ebook_path = $validator->uploadEbook($ebook)) {
+            if ($ebook_path = uploadEbook($ebook)) {
                 $book->setEbookPath($ebook_path);
             }
         }
@@ -102,12 +122,12 @@ if (isset($_POST['save_book']) && getUser()['access'] == 'admin') {
         if (isset($_POST['id'])) {
             $book->setId($_POST['id']);
             if ($book = $book_repo->update($book)) {
-                if ($validator->isPostValid('authors')) {
+                if (isPostValid('authors')) {
                     $authors = $_POST['authors'];
 
                     foreach ($authors as $name) {
-                        if ($dto = $authors_repo->findOrInsert(new DTO(null, $name))) {
-                            if (!$authors_books_repo->isJoinExist($dto->getId(),$book->getId())){
+                        if ($dto = $authors_repo->findOrInsert($name)) {
+                            if (!$authors_books_repo->isJoinExist($dto->getId(), $book->getId())) {
                                 $authors_books_repo->join($dto->getId(), $book->getId());
                             }
                         }
@@ -116,16 +136,19 @@ if (isset($_POST['save_book']) && getUser()['access'] == 'admin') {
                     $db->commit();
 
                     /////// Redirect ///////
-                    setAlert('Book updated successfully!','success');
-                    redirectTo(APP_BASE_URL . '/books/view.php?book_id='.$book->getId());
+                    setAlert('Book updated successfully!', 'success');
+                    redirectTo(APP_URL_BASE . '/books/view.php?book_id=' . $book->getId());
                 }
             }
+            /////// Redirect ///////
+            setAlert('Nothing to update!', 'warning');
+            redirectTo(APP_URL_BASE . '/books/edit.php?book_id=' . $_POST['id']);
         } else if ($book = $book_repo->add($book)) {
-            if ($validator->isPostValid('authors')) {
+            if (isPostValid('authors')) {
                 $authors = $_POST['authors'];
 
                 foreach ($authors as $name) {
-                    if ($dto = $authors_repo->findOrInsert(new DTO(null, $name))) {
+                    if ($dto = $authors_repo->findOrInsert($name)) {
                         $authors_books_repo->join($dto->getId(), $book->getId());
                     }
                 }
@@ -133,192 +156,70 @@ if (isset($_POST['save_book']) && getUser()['access'] == 'admin') {
                 $db->commit();
 
                 /////// Redirect ///////
-                setAlert('Book added successfully!','success');
-                redirectTo(APP_BASE_URL . '/books/add.php');
+                setAlert('Book added successfully!', 'success');
+                redirectTo(APP_URL_BASE . '/books/add.php');
             }
-        } else{
+        } else {
             $db->rollback();
         }
     } catch (PDOException $e) {
         $db->rollback();
-        echo $e;
     }
 
     /////// Redirect ///////
-    setAlert('Book couldn\'t be added!','danger');
-    redirectTo(APP_BASE_URL . '/books/add.php');
+    setAlert('Book couldn\'t be added!', 'danger');
+    redirectTo(APP_URL_BASE . '/books/add.php');
 }
 
-
-class BookValidator
+/**
+ * @param string $key
+ * @return bool
+ */
+function isPostValid($key)
 {
-    private $book_repo;
-    private $conditions;
-    private $upload_dir;
+    global $conditions;
 
-    function __construct()
-    {
-        $this->conditions = [
-            'edition_year' => array('type' => 'int', 'min' => 3, 'max' => 4, 'optional' => false),
-            'publish_year' => array('type' => 'int', 'min' => 3, 'max' => 4, 'optional' => false),
-            'pages' => array('type' => 'int', 'min' => 1, 'max' => 4, 'optional' => false),
-            'copies' => array('type' => 'int', 'min' => 1, 'max' => 5, 'optional' => false),
-            'title' => array('type' => 'text', 'min' => 3, 'max' => 50, 'optional' => false),
-            'edition' => array('type' => 'text', 'min' => 1, 'max' => 50, 'optional' => false),
-            'shelf' => array('type' => 'text', 'min' => 1, 'max' => 50, 'optional' => false),
-            'source' => array('type' => 'text', 'min' => 3, 'max' => 50, 'optional' => false),
-            'condition' => array('type' => 'text', 'min' => 3, 'max' => 50, 'optional' => false),
-            'category' => array('type' => 'text', 'min' => 3, 'max' => 50, 'optional' => false),
-            'publisher' => array('type' => 'text', 'min' => 1, 'max' => 50, 'optional' => false),
-            'isbn' => array('type' => 'text', 'min' => 10, 'max' => 20, 'optional' => true),
-            'subtitle' => array('type' => 'text', 'min' => 3, 'max' => 100, 'optional' => true),
-            'note' => array('type' => 'text', 'min' => 3, 'max' => 200, 'optional' => true),
-            'price' => array('type' => 'currency', 'min' => 1, 'max' => 10, 'optional' => false),
-            'authors' => array('type' => 'text_arr', 'min' => 3, 'max' => 50, 'optional' => false)
-        ];
-        $this->book_repo = new BooksRepository();
-    }
-
-    /**
-     * @param string $key
-     * @return bool
-     */
-    function isPostValid($key)
-    {
-        if (isset($_POST[$key])) {
-            $condition = $this->conditions[$key];
-            $min = $condition['min'];
-            $max = $condition['max'];
-            $type = $condition['type'];
-            $is_optional = $condition['optional'];
-            switch ($type) {
-                case 'int':
-                    $data = $_POST[$key];
-                    if ($this->isPositiveInteger($data)
-                        && $this->isStringValidLength($data, $min, $max, $is_optional)) {
-                        return true;
-                    }
-                    return false;
-                case 'text':
-                    $data = $_POST[$key];
-                    if ($this->isStringValidLength($data, $min, $max, $is_optional)) {
-                        return true;
-                    }
-                    return false;
-                case 'currency':
-                    $data = $_POST[$key];
-                    if ($this->isValidCurrency($data)
-                        && $this->isStringValidLength($data, $min, $max, $is_optional)) {
-                        return true;
-                    }
-                    return false;
-                case 'text_arr':
-                    $data = $_POST[$key];
-                    if (is_array($data)) {
-                        if (count($data) > 0) {
-                            foreach ($data as $value) {
-                                if (!$this->isStringValidLength($value, $min, $max)) {
-                                    return false;
-                                }
-                            }
-                            return true;
-                        }
-                    }
-                    return false;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * @param string $str
-     * @param int $min
-     * @param int $max
-     * @param bool $is_optional
-     * @return bool
-     */
-    function isStringValidLength($str, $min, $max, $is_optional = false)
-    {
-        $len = strlen($str);
-        if ($is_optional) {
-            return ($len == 0 || ($len >= $min && $len <= $max));
-        }
-        return ($len >= $min && $len <= $max);
-    }
-
-    /**
-     * @param $number
-     * @return bool
-     */
-    function isPositiveInteger($number)
-    {
-        if (is_numeric($number)) {
-            if (is_string($number) && strpos($number, '.') === true) {
+    if (isset($_POST[$key])) {
+        $condition = $conditions[$key];
+        $min = $condition['min'];
+        $max = $condition['max'];
+        $type = $condition['type'];
+        $is_optional = $condition['optional'];
+        switch ($type) {
+            case 'int':
+                $data = $_POST[$key];
+                if (isPositiveInteger($data)
+                    && isStringValidLength($data, $min, $max, $is_optional)) {
+                    return true;
+                }
                 return false;
-            }
-            $number = (int)$number;
-            if ($number > 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * @param string $number
-     * @return bool|int
-     */
-    function isValidCurrency($number)
-    {
-        return preg_match("/^[\d+]{1,5}([\.]{1,1}[\d+]{1,2})?$/", $number);
-    }
-
-
-    public function uploadImage($file)
-    {
-        if (is_uploaded_file($file['tmp_name']) || file_exists($file['tmp_name'])) {
-            $extensions = array(
-                'jpg' => 'image/jpeg',
-                'png' => 'image/png'
-            );
-            return $this->upload($file, $extensions, 512000, APP_UPLOAD_DIR_COVERS);
-        }
-        return false;
-    }
-
-    public function uploadEbook($file)
-    {
-        if (is_uploaded_file($file['tmp_name']) || file_exists($file['tmp_name'])) {
-            $eBook_dir = UPLOAD_DIR . "/ebooks";
-            $extensions = array(
-                'pdf' => 'application/pdf',
-                'epub' => 'application/epub+zip',
-                'chm' => 'application/vnd.ms-htmlhelp',
-                'djvu' => 'image/vnd.djvu',
-                'mobi' => 'application/x-mobipocket-ebook'
-            );
-            return $this->upload($file, $extensions, 30000000, APP_UPLOAD_DIR_EBOOKS);
-        }
-        return false;
-    }
-
-    public function upload($file, $extensions, $max_size, $directory)
-    {
-        if (!file_exists($directory)) {
-            mkdir($directory);
-        }
-        if (isset($file['error']) && !is_array($file['error']) && $file['error'] == UPLOAD_ERR_OK) {
-            if ($file['size'] < $max_size) {
-                $file_info = new finfo(FILEINFO_MIME_TYPE);
-                if (false !== $ext = array_search($file_info->file($file['tmp_name']), $extensions, true)) {
-                    $sha1 = sha1_file($file['tmp_name']);
-                    $destination_path = sprintf($directory . DIRECTORY_SEPARATOR . "%s.%s", $sha1, $ext);
-                    if (move_uploaded_file($file['tmp_name'], $destination_path)) {
-                        return $sha1.'.'.$ext;
+            case 'text':
+                $data = $_POST[$key];
+                if (isStringValidLength($data, $min, $max, $is_optional)) {
+                    return true;
+                }
+                return false;
+            case 'currency':
+                $data = $_POST[$key];
+                if (isValidCurrency($data)
+                    && isStringValidLength($data, $min, $max, $is_optional)) {
+                    return true;
+                }
+                return false;
+            case 'text_arr':
+                $data = $_POST[$key];
+                if (is_array($data)) {
+                    if (count($data) > 0) {
+                        foreach ($data as $value) {
+                            if (!isStringValidLength($value, $min, $max)) {
+                                return false;
+                            }
+                        }
+                        return true;
                     }
                 }
-            }
+                return false;
         }
-        return false;
     }
+    return false;
 }

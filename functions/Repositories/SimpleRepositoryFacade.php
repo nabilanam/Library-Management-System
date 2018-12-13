@@ -37,4 +37,9 @@ class SimpleRepositoryFacade
     {
         return new SimpleRepository('user_genders');
     }
+
+    public static function getRequestStatusRepository()
+    {
+        return new SimpleRepository('request_status');
+    }
 }
