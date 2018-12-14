@@ -11,8 +11,6 @@ if (isset($_POST['send']) && isset($_POST['address']) && isset($_POST['subject']
     $mailer = new Mailer();
 
     if ($mailer->send($mail)) {
-        $repo = new MailRepository();
-        $repo->add($mail);
         setAlert('Email sent successfully', 'success');
     } else {
         setAlert('Email couldn\'t be sent', 'danger');
