@@ -1,5 +1,6 @@
 <?php
-require_once '../Models/Mail.php';
+require_once __DIR__.'/../Models/Mail.php';
+require_once 'Repository.php';
 require_once 'Pagination.php';
 
 class MailRepository extends Repository implements Pagination
@@ -22,9 +23,10 @@ class MailRepository extends Repository implements Pagination
         $data = [
             'address'=>$mail->getAddress(),
             'subject'=>$mail->getSubject(),
-            'message'=>$mail->getMessage()
+            'message'=>$mail->getMessage(),
+            'dtime'=>$mail->getDtime()
         ];
-        $query = "INSERT INTO $this->table SET address=:address, subject=:subject, message=:message";
+        $query = "INSERT INTO $this->table SET address=:address, subject=:subject, message=:message, dtime=:dtime";
         $result = $this->db->bindQuery($query, $data);
         if ($result->rowCount() == 1) {
             $mail->setId($this->db->lastInsertId());
@@ -57,7 +59,7 @@ class MailRepository extends Repository implements Pagination
         $result = $this->db->query($query);
         $arr = [];
         while ($row = $result->fetch(PDO::FETCH_ASSOC)){
-            $arr[] = new Mail($row['id'],$row['address'],$row['subject'],$row['message']);
+            $arr[] = new Mail($row['id'],$row['address'],$row['subject'],$row['message'],$row['dtime']);
         }
         return $arr;
     }
@@ -74,7 +76,7 @@ class MailRepository extends Repository implements Pagination
         $result = $this->db->query($query);
         $arr = [];
         while ($row = $result->fetch(PDO::FETCH_ASSOC)){
-            $arr[] = new Mail($row['id'],$row['address'],$row['subject'],$row['message']);
+            $arr[] = new Mail($row['id'],$row['address'],$row['subject'],$row['message'],$row['dtime']);
         }
         return $arr;
     }
