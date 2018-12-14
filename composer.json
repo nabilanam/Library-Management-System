@@ -6,6 +6,7 @@
       "ext-fileinfo": "*",
       "ext-ctype": "*",
       "ext-json": "*",
-      "ext-spltype": "*"
+      "ext-spltype": "*",
+      "ext-mbstring": "*"
     }
 }
