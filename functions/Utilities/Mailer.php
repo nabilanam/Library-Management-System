@@ -1,26 +1,25 @@
 <?php
 
-require_once __DIR__."/../../vendor/autoload.php";
+require_once __DIR__ . "/../../vendor/autoload.php";
+require_once __DIR__ . "/../Repositories/MailsRepository.php";
+require_once __DIR__ . "/../Repositories/MailSettingsRepository.php";
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 class Mailer
 {
-    /* @var \PHPMailer\PHPMailer\PHPMailer*/
-    private $mail;
-    private $host;
-    private $username;
-    private $password;
-    private $port;
+    /* @var \PHPMailer\PHPMailer\PHPMailer */
+    private $phpmailer;
+    private $settings;
+    private $repo;
 
     public function __construct()
     {
-        $this->host = 'smtp.mail.com';
-        $this->username = 'librarysys@mail.com';
-        $this->password = 'LMS@sys123';
-        $this->port = 587;
-        $this->mail = new PHPMailer(true);
+        $settings_repo = new MailSettingsRepository();
+        $this->settings = $settings_repo->find();
+        $this->phpmailer = new PHPMailer(true);
+        $this->repo = new MailsRepository();
     }
 
     /**
@@ -29,24 +28,32 @@ class Mailer
      */
     public function send($mail)
     {
+        if (!$this->settings){
+            setAlert('Please configure mail settings!','danger');
+            return false;
+        }
         try {
-            $this->mail->isSMTP();
-            $this->mail->Host = $this->host;
-            $this->mail->SMTPAuth = true;
-            $this->mail->Username = $this->username;
-            $this->mail->Password = $this->password;
-            $this->mail->SMTPSecure = 'tls';
-            $this->mail->Port = $this->port;
+            $this->phpmailer->isSMTP();
+            $this->phpmailer->Host = $this->settings->getHost();
+            $this->phpmailer->SMTPAuth = true;
+            $this->phpmailer->Username = $this->settings->getUsername();
+            $this->phpmailer->Password = $this->settings->getPassword();
+            $this->phpmailer->SMTPSecure = 'tls';
+            $this->phpmailer->Port = $this->settings->getPort();
 
-            $this->mail->setFrom($this->username, 'Library System');
-            $this->mail->addAddress($mail->getAddress());
+            $this->phpmailer->setFrom($this->settings->getUsername(), 'Library System');
+            $this->phpmailer->addAddress($mail->getAddress());
 
-            $this->mail->isHTML(true);
-            $this->mail->Subject = $mail->getSubject();
-            $this->mail->Body = $mail->getMessage();
+            $this->phpmailer->isHTML(true);
+            $this->phpmailer->Subject = $mail->getSubject();
+            $this->phpmailer->Body = $mail->getMessage();
 
-            $this->mail->send();
-            return true;
+            if ($this->phpmailer->send()) {
+                $this->repo->add($mail);
+                return true;
+            }
+            return false;
+
         } catch (Exception $e) {
             return false;
         }

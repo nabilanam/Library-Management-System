@@ -6,6 +6,7 @@ class Mail
     private $address;
     private $subject;
     private $message;
+    private $dtime;
 
     /**
      * Mail constructor.
@@ -13,11 +14,16 @@ class Mail
      * @param $subject
      * @param $message
      */
-    public function __construct($id ,$address, $subject, $message)
+    public function __construct($id ,$address, $subject, $message, $dtime=null)
     {
         $this->address = $address;
         $this->subject = $subject;
         $this->message = $message;
+        if (empty($dtime)){
+            $this->dtime = getNow();
+        }else{
+            $this->dtime = $dtime;
+        }
     }
 
     /**
@@ -84,4 +90,19 @@ class Mail
         $this->message = $message;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getDtime()
+    {
+        return $this->dtime;
+    }
+
+    /**
+     * @param mixed $dtime
+     */
+    public function setDtime($dtime)
+    {
+        $this->dtime = $dtime;
+    }
 }
