@@ -122,7 +122,7 @@ function updateRequest($req_repo)
                 setAlert('Date limit exceeded', 'danger');
                 redirectTo(APP_URL_BASE . '/requests');
             }
-            if ($req_repo->countNonReturnedBooksByUserId($request->getUser()->getId()) >= $request->getUser()->getUserType()->getBookLimit()) {
+            if ($req_repo->totalNonReturnedBooksByUserId($request->getUser()->getId()) >= $request->getUser()->getUserType()->getBookLimit()) {
                 setAlert('Sorry! user id ' . $request->getUser()->getId() . ' has reached maximum book limit ' . $request->getUser()->getUserType()->getBookLimit() . ' !', 'danger');
                 redirectTo(APP_URL_BASE . '/requests');
             }
@@ -203,7 +203,7 @@ function createRequest($req_repo, $book_repo, $book, $user, $status, $issue_date
         }
     }
 
-    if ($req_repo->countNonReturnedBooksByUserId($user->getId()) >= $user->getUserType()->getBookLimit()) {
+    if ($req_repo->totalNonReturnedBooksByUserId($user->getId()) >= $user->getUserType()->getBookLimit()) {
         if (isAdmin()){
             $message = 'Sorry! user id ' . $user->getId() . ' has reached maximum book limit ' . $user->getUserType()->getBookLimit() . ' !';
         }else{

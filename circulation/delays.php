@@ -9,7 +9,7 @@ $current_page = isset($_GET['page']) && is_numeric($_GET['page']) ? $_GET['page'
 $results_per_page = 5;
 
 if (!isAdmin()) {
-    $number_of_rows = $repo->countNonReturnedBooksByUserId(getUser()['id']);
+    $number_of_rows = $repo->totalNonReturnedBooksByUserId(getUser()['id']);
     $total_pages = ceil($number_of_rows / $results_per_page);
     $first_result = ($current_page - 1) * $results_per_page;
 
@@ -18,11 +18,11 @@ if (!isAdmin()) {
         setAlert('You are clean!', 'success');
     }
 }else{
-    $number_of_rows = $repo->countAllNonReturnedBooks();
+    $number_of_rows = $repo->totalNonReturnedBooks();
     $total_pages = ceil($number_of_rows / $results_per_page);
     $first_result = ($current_page - 1) * $results_per_page;
 
-    $arr = $repo->getAllNonReturnedBooksPaginated($first_result,$results_per_page);
+    $arr = $repo->getNonReturnedBooksPaginated($first_result,$results_per_page);
 
     if (empty($arr)) {
         setAlert('No late returns!', 'success');

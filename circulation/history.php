@@ -40,7 +40,7 @@ $limit = 5;
 
 if (isAdmin() && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
 
-    $total_pages = ceil($req_repo->countAllBooksByUserId($_GET['user_id']) / $limit);
+    $total_pages = ceil($req_repo->totalBooksByUserId($_GET['user_id']) / $limit);
     $to = ($current_page - 1) * $limit;
 
     $url = $url . 'user_id=' . $_GET['user_id'] . '&';
@@ -55,7 +55,7 @@ if (isAdmin() && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
 
 } elseif (!isAdmin()) {
 
-    $total_pages = ceil($req_repo->countAllBooksByUserId(getUser()['id']) / $limit);
+    $total_pages = ceil($req_repo->totalBooksByUserId(getUser()['id']) / $limit);
     $to = ($current_page - 1) * $limit;
 
     $arr = $req_repo->findByUserIdPaginated(getUser()['id'], false, $to, $limit);

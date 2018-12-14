@@ -11,14 +11,14 @@ $repo = new RequestsRepository();
 $current_page = isset($_GET['page']) && is_numeric($_GET['page']) ? $_GET['page'] : 1;
 $results_per_page = 5;
 if (isAdmin()) {
-    $number_of_rows = $repo->countAllPendingBooks();
+    $number_of_rows = $repo->totalPendingBooks();
     $total_pages = ceil($number_of_rows / $results_per_page);
     $first_result = ($current_page - 1) * $results_per_page;
 
-    $arr = $repo->getAllPendingsPaginated($first_result,$results_per_page);
+    $arr = $repo->getPendingsPaginated($first_result,$results_per_page);
 
 } else {
-    $number_of_rows = $repo->countAllPendingBooksByUserId(getUser()['id']);
+    $number_of_rows = $repo->totalPendingBooksByUserId(getUser()['id']);
     $total_pages = ceil($number_of_rows / $results_per_page);
     $first_result = ($current_page - 1) * $results_per_page;
 
