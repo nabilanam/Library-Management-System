@@ -13,6 +13,12 @@ $results_per_page = 5;
 if (isset($_GET['query']) && isset($_GET['option'])) {
     $query = trim($_GET['query']);
     $option = $_GET['option'];
+
+    if (empty($query)){
+        setAlert('Enter query!','danger');
+        redirectTo(APP_URL_BASE.'/members/search.php');
+    }
+
     if ($option == 1) {
         $number_of_rows = $repo->totalAllTypeSearchRecords($query);
         $total_pages = ceil($number_of_rows / $results_per_page);
