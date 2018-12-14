@@ -14,10 +14,10 @@ if (isset($_POST['delete_id']) && isAdmin()) {
     $db = Database::getInstance();
     $db->beginTransaction();
 
+    $users_repo = new UsersRepository();
+    $details_repo = new UserDetailsRepository();
+    $user = $users_repo->findById($id);
     try {
-        $users_repo = new UsersRepository();
-        $details_repo = new UserDetailsRepository();
-        $user = $users_repo->findById($id);
         if ($user) {
             if ($users_repo->removeById($id)) {
                 if ($details_repo->removeById($user->getUserDetails()->getId())) {
@@ -30,7 +30,7 @@ if (isset($_POST['delete_id']) && isAdmin()) {
         }
     } catch (Exception $e) {
         $db->rollback();
-        setAlert('Sorry only new members can be deleted!', 'danger');
+        setAlert('Sorry only members without circulation history can be deleted!', 'danger');
     }
 }
 alertBox();
