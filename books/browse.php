@@ -19,14 +19,18 @@ if (isset($_POST['delete_id']) && isAdmin()) {
     }
 
     $repo = new BooksRepository();
-    if ($repo->removeById($id)) {
-        $db->commit();
+    try{
+        if ($repo->removeById($id)) {
+            $db->commit();
 
-        setAlert("Book with $id deleted successfully", 'success');
-        redirectTo(APP_URL_BASE . '/books/browse.php');
-    } else {
+            setAlert("Book with $id deleted successfully", 'success');
+            redirectTo(APP_URL_BASE . '/books/browse.php');
+        } else {
+            $db->rollback();
+        }
+    }catch (Exception $e){
         $db->rollback();
-        echo 'ERROR';
+        setAlert("Can't be deleted!",'warning');
     }
 }
 alertBox();
@@ -40,9 +44,9 @@ $total_pages = ceil($number_of_rows / $results_per_page);
 $first_result = ($current_page - 1) * $results_per_page;
 
 
-$books = $repo->getPaginated($first_result, $results_per_page);
+$arr = $repo->getPaginated($first_result, $results_per_page);
 
-printBookTable($books);
+printBookTable($arr);
 
 printPagination($current_page,$total_pages,APP_URL_BASE.'/books/browse.php?');
 ?>
