@@ -2,8 +2,8 @@
 require_once 'Pagination.php';
 require_once 'UsersRepository.php';
 require_once 'BooksRepository.php';
-require_once __DIR__.'/../Models/Request.php';
-require_once __DIR__.'/../Enums/Status.php';
+require_once __DIR__ . '/../Models/Request.php';
+require_once __DIR__ . '/../Enums/Status.php';
 
 class RequestsRepository extends Repository implements Pagination
 {
@@ -66,7 +66,7 @@ class RequestsRepository extends Repository implements Pagination
                     FROM $this->table
                     INNER JOIN request_status rs on $this->table.request_status_id = rs.id
                     WHERE $this->table.id=:id";
-        $result = $this->db->bindQuery($query,['id'=>$id]);
+        $result = $this->db->bindQuery($query, ['id' => $id]);
         $arr = [];
         while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
             $user = $this->users_repo->findById($row['users_id']);
@@ -75,7 +75,7 @@ class RequestsRepository extends Repository implements Pagination
             $request = new Request($row['id'], $book, $user, $status, $row['request_date'], $row['issue_date'], $row['return_date'], $row['receive_date'], $row['total_fine'], $row['user_read']);
             $arr[] = $request;
         }
-        if (count($arr) == 1){
+        if (count($arr) == 1) {
             return $arr[0];
         }
         return false;
@@ -90,9 +90,9 @@ class RequestsRepository extends Repository implements Pagination
     public function findByUserIdBookIdIssueDate($user_id, $book_id, $issue_date)
     {
         $data = [
-            'user_id'=>$user_id,
-            'book_id'=>$book_id,
-            'issue_date'=>$issue_date,
+            'user_id' => $user_id,
+            'book_id' => $book_id,
+            'issue_date' => $issue_date,
         ];
         $query = "SELECT requests.id, books_id, users_id, request_status_id, 
                     request_date, issue_date, return_date, receive_date, total_fine, user_read,
@@ -101,7 +101,7 @@ class RequestsRepository extends Repository implements Pagination
                     INNER JOIN request_status rs on $this->table.request_status_id = rs.id
                     WHERE $this->table.users_id=:user_id AND $this->table.books_id=:book_id AND $this->table.issue_date=:issue_date";
         $query = $query . ' ORDER BY requests.id DESC';
-        $result = $this->db->bindQuery($query,$data);
+        $result = $this->db->bindQuery($query, $data);
         $arr = [];
         while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
             $user = $this->users_repo->findById($row['users_id']);
@@ -127,11 +127,11 @@ class RequestsRepository extends Repository implements Pagination
                     FROM $this->table
                     INNER JOIN request_status rs on $this->table.request_status_id = rs.id
                     WHERE requests.users_id=:id ";
-        if ($skip_user_read){
+        if ($skip_user_read) {
             $query = $query . "AND user_read = 0 ";
         }
         $query = $query . "ORDER BY requests.id DESC LIMIT $to, $limit";
-        $result = $this->db->bindQuery($query,['id'=>$user_id]);
+        $result = $this->db->bindQuery($query, ['id' => $user_id]);
         $arr = [];
         while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
             $user = $this->users_repo->findById($row['users_id']);
@@ -207,7 +207,7 @@ class RequestsRepository extends Repository implements Pagination
                     INNER JOIN request_status rs on $this->table.request_status_id = rs.id
                     WHERE users_id=:id AND return_date < CURDATE() 
                     LIMIT $to, $limit";
-        $result = $this->db->bindQuery($query,['id'=>$id]);
+        $result = $this->db->bindQuery($query, ['id' => $id]);
         $arr = [];
         while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
             $user = $this->users_repo->findById($row['users_id']);
@@ -222,7 +222,7 @@ class RequestsRepository extends Repository implements Pagination
     /**
      * @return Request[]
      */
-    public function getAllNonReturnedBooksPaginated($to, $limit)
+    public function getNonReturnedBooksPaginated($to, $limit)
     {
         $query = "SELECT requests.id, books_id, users_id, request_status_id, 
                     request_date, issue_date, return_date, receive_date, total_fine, user_read,
@@ -272,10 +272,10 @@ class RequestsRepository extends Repository implements Pagination
     /**
      * @return Request[]
      */
-    public function getAllPendingsPaginated($to, $limit)
+    public function getPendingsPaginated($to, $limit)
     {
         $data = [
-            'status_id'=>Status::PENDING
+            'status_id' => Status::PENDING
         ];
         $query = "SELECT requests.id, books_id, users_id, request_status_id, 
                     request_date, issue_date, return_date, receive_date, total_fine, user_read,
@@ -286,7 +286,7 @@ class RequestsRepository extends Repository implements Pagination
                     ORDER BY requests.id DESC
                     LIMIT $to, $limit";
 
-        $result = $this->db->bindQuery($query,$data);
+        $result = $this->db->bindQuery($query, $data);
         $arr = [];
         while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
             $user = $this->users_repo->findById($row['users_id']);
@@ -298,60 +298,108 @@ class RequestsRepository extends Repository implements Pagination
         return $arr;
     }
 
-    public function countAllBooksByUserId($user_id)
+    public function totalBooksByUserId($user_id)
     {
         $data = [
-            'user_id'=>$user_id
+            'user_id' => $user_id
         ];
         $query = "SELECT COUNT(*) FROM requests
                   WHERE users_id=:user_id";
-        $result = $this->db->bindQuery($query,$data);
+        $result = $this->db->bindQuery($query, $data);
         return $result->fetchColumn();
     }
 
-    public function countAllNonReturnedBooks()
+    public function totalPendingBooks()
     {
         $data = [
-            'status_id'=>Status::APPROVED
+            'status_id' => Status::PENDING
         ];
         $query = "SELECT COUNT(*) FROM requests
                   WHERE request_status_id=:status_id";
-        $result = $this->db->bindQuery($query,$data);
+        $result = $this->db->bindQuery($query, $data);
         return $result->fetchColumn();
     }
 
-    public function countAllPendingBooks()
+    public function totalPendingBooksByUserId($id)
     {
         $data = [
-            'status_id'=>Status::PENDING
-        ];
-        $query = "SELECT COUNT(*) FROM requests
-                  WHERE request_status_id=:status_id";
-        $result = $this->db->bindQuery($query,$data);
-        return $result->fetchColumn();
-    }
-
-    public function countAllPendingBooksByUserId($id)
-    {
-        $data = [
-            'id'=>$id,
-            'status_id'=>Status::PENDING
+            'id' => $id,
+            'status_id' => Status::PENDING
         ];
         $query = "SELECT COUNT(*) FROM requests
                   WHERE users_id=:id AND request_status_id=:status_id";
-        $result = $this->db->bindQuery($query,$data);
+        $result = $this->db->bindQuery($query, $data);
         return $result->fetchColumn();
     }
 
-    public function countNonReturnedBooksByUserId($user_id)
+    public function totalNonReturnedBooks()
     {
         $data = [
-            'user_id'=>$user_id,
-            'status_id'=>Status::APPROVED
+            'status_id' => Status::APPROVED
+        ];
+        $query = "SELECT COUNT(*) FROM requests
+                  WHERE request_status_id=:status_id";
+        $result = $this->db->bindQuery($query, $data);
+        return $result->fetchColumn();
+    }
+
+    public function totalNonReturnedBooksByUserId($user_id)
+    {
+        $data = [
+            'user_id' => $user_id,
+            'status_id' => Status::APPROVED
         ];
         $query = "SELECT COUNT(*) FROM requests
                   WHERE users_id=:user_id AND request_status_id=:status_id";
-        $result = $this->db->bindQuery($query,$data);
+        $result = $this->db->bindQuery($query, $data);
+        return $result->fetchColumn();
+    }
+
+    public function totalApprovedReturnedLostBooks()
+    {
+        $data = [
+            'approved' => Status::APPROVED,
+            'returned' => Status::RETURNED,
+            'lost' => Status::LOST,
+        ];
+        $query = "SELECT COUNT(*) FROM requests
+                  WHERE request_status_id=:approved 
+                  OR request_status_id=:returned 
+                  OR request_status_id=:lost";
+        $result = $this->db->bindQuery($query, $data);
+        return $result->fetchColumn();
+    }
+
+    public function totalApprovedReturnedLostBooksByUser($id)
+    {
+        $data = [
+            'id'=>$id,
+            'approved' => Status::APPROVED,
+            'returned' => Status::RETURNED,
+            'lost' => Status::LOST,
+        ];
+        $query = "SELECT COUNT(*) FROM requests
+                  WHERE users_id=:id AND (request_status_id=:approved 
+                  OR request_status_id=:returned 
+                  OR request_status_id=:lost)";
+        $result = $this->db->bindQuery($query, $data);
+        return $result->fetchColumn();
+    }
+
+    public function totalApprovedReturnedLostBooksThisMonth()
+    {
+        $data = [
+            'approved' => Status::APPROVED,
+            'returned' => Status::RETURNED,
+            'lost' => Status::LOST,
+        ];
+        $query = "SELECT COUNT(*) FROM requests
+                  WHERE MONTH(issue_date) = MONTH(CURRENT_DATE())
+                  AND YEAR(issue_date) = YEAR(CURRENT_DATE())
+                  AND (request_status_id=:approved 
+                  OR request_status_id=:returned 
+                  OR request_status_id=:lost)";
+        $result = $this->db->bindQuery($query, $data);
         return $result->fetchColumn();
     }
 }

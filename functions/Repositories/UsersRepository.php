@@ -35,11 +35,12 @@ class UsersRepository extends Repository implements Pagination
             'password_hash' => $user->getPasswordHash(),
             'validation_code' => $user->getValidationCode(),
             'activated' => $user->getActivated(),
+            'activation_dtime'=> $user->getActivationDatetime()
         ];
         $query = "INSERT INTO $this->table 
                   SET user_types_id=:user_types_id, user_details_id=:user_details_id, 
                   email=:email, password_hash=:password_hash, validation_code=:validation_code, 
-                  activated=:activated";
+                  activated=:activated, activation_dtime=:activation_dtime";
         $result = $this->db->bindQuery($query, $data);
         if ($result->rowCount() == 1) {
             $user->setId($this->db->lastInsertId());
@@ -67,7 +68,7 @@ class UsersRepository extends Repository implements Pagination
     {
         $query = "SELECT 
                         u.id, u.user_types_id, u.user_details_id, u.email, 
-                        u.password_hash, u.validation_code, u.activated, 
+                        u.password_hash, u.validation_code, u.activated, u.activation_dtime,
                         ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
                         ug.id genders_id, ug.name genders_name, 
                         ud.first_name, ud.last_name, ud.mobile_no, 
@@ -95,7 +96,7 @@ class UsersRepository extends Repository implements Pagination
     {
         $query = "SELECT 
                         u.id, u.user_types_id, u.user_details_id, u.email, 
-                        u.password_hash, u.validation_code, u.activated, 
+                        u.password_hash, u.validation_code, u.activated, u.activation_dtime,
                         ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
                         ug.id genders_id, ug.name genders_name, 
                         ud.first_name, ud.last_name, ud.mobile_no, 
@@ -125,12 +126,13 @@ class UsersRepository extends Repository implements Pagination
             'email' => $user->getEmail(),
             'phash' => $user->getPasswordHash(),
             'vcode' => $user->getValidationCode(),
-            'activated' => $user->getActivated()
+            'activated' => $user->getActivated(),
+            'activation_dtime'=> $user->getActivationDatetime()
         ];
 
         $query = "UPDATE $this->table 
                   SET user_types_id=:utype_id, user_details_id=:udetails_id, email=:email, 
-                  password_hash=:phash, validation_code=:vcode, activated=:activated 
+                  password_hash=:phash, validation_code=:vcode, activated=:activated, u.activation_dtime=:activation_dtime
                   WHERE id=:id";
         $result = $this->db->bindQuery($query, $data);
 
@@ -144,7 +146,7 @@ class UsersRepository extends Repository implements Pagination
     {
         $query = "SELECT 
                         u.id, u.user_types_id, u.user_details_id, u.email, 
-                        u.password_hash, u.validation_code, u.activated, 
+                        u.password_hash, u.validation_code, u.activated, u.activation_dtime,
                         ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
                         ug.id genders_id, ug.name genders_name, 
                         ud.first_name, ud.last_name, ud.mobile_no, 
@@ -168,7 +170,7 @@ class UsersRepository extends Repository implements Pagination
     {
         $query = "SELECT 
                         u.id, u.user_types_id, u.user_details_id, u.email, 
-                        u.password_hash, u.validation_code, u.activated, 
+                        u.password_hash, u.validation_code, u.activated, u.activation_dtime,
                         ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
                         ug.id genders_id, ug.name genders_name, 
                         ud.first_name, ud.last_name, ud.mobile_no, 
@@ -195,7 +197,7 @@ class UsersRepository extends Repository implements Pagination
     {
         $query = "SELECT 
                         u.id, u.user_types_id, u.user_details_id, u.email, 
-                        u.password_hash, u.validation_code, u.activated, 
+                        u.password_hash, u.validation_code, u.activated, u.activation_dtime,
                         ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
                         ug.id genders_id, ug.name genders_name, 
                         ud.first_name, ud.last_name, ud.mobile_no, 
@@ -280,7 +282,8 @@ class UsersRepository extends Repository implements Pagination
                 $row['email'],
                 $row['password_hash'],
                 $row['validation_code'],
-                $row['activated']
+                $row['activated'],
+                $row['activation_dtime']
             );
 
             $arr[] = $user;
@@ -353,11 +356,20 @@ class UsersRepository extends Repository implements Pagination
         return $result->fetchColumn();
     }
 
+    public function totalActivatedRecordsThisMonth()
+    {
+        $query = "SELECT COUNT(*) FROM $this->table
+                  WHERE MONTH(activation_dtime) = MONTH(CURRENT_DATE())
+                  AND YEAR(activation_dtime) = YEAR(CURRENT_DATE())";
+        $result = $this->db->query($query);
+        return $result->fetchColumn();
+    }
+
     public function getPaginatedAllTypeSearch($search, $to, $limit)
     {
         $query = "SELECT 
                         u.id, u.user_types_id, u.user_details_id, u.email, 
-                        u.password_hash, u.validation_code, u.activated, 
+                        u.password_hash, u.validation_code, u.activated, u.activation_dtime,
                         ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
                         ug.id genders_id, ug.name genders_name, 
                         ud.first_name, ud.last_name, ud.mobile_no, 
@@ -380,7 +392,7 @@ class UsersRepository extends Repository implements Pagination
     {
         $query = "SELECT 
                         u.id, u.user_types_id, u.user_details_id, u.email, 
-                        u.password_hash, u.validation_code, u.activated, 
+                        u.password_hash, u.validation_code, u.activated, u.activation_dtime, 
                         ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
                         ug.id genders_id, ug.name genders_name, 
                         ud.first_name, ud.last_name, ud.mobile_no, 
@@ -403,7 +415,7 @@ class UsersRepository extends Repository implements Pagination
     {
         $query = "SELECT 
                         u.id, u.user_types_id, u.user_details_id, u.email, 
-                        u.password_hash, u.validation_code, u.activated, 
+                        u.password_hash, u.validation_code, u.activated, u.activation_dtime,
                         ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
                         ug.id genders_id, ug.name genders_name, 
                         ud.first_name, ud.last_name, ud.mobile_no, 
@@ -426,7 +438,7 @@ class UsersRepository extends Repository implements Pagination
     {
         $query = "SELECT 
                         u.id, u.user_types_id, u.user_details_id, u.email, 
-                        u.password_hash, u.validation_code, u.activated, 
+                        u.password_hash, u.validation_code, u.activated, u.activation_dtime,
                         ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
                         ug.id genders_id, ug.name genders_name, 
                         ud.first_name, ud.last_name, ud.mobile_no, 
@@ -449,7 +461,7 @@ class UsersRepository extends Repository implements Pagination
     {
         $query = "SELECT 
                         u.id, u.user_types_id, u.user_details_id, u.email, 
-                        u.password_hash, u.validation_code, u.activated, 
+                        u.password_hash, u.validation_code, u.activated, u.activation_dtime,
                         ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
                         ug.id genders_id, ug.name genders_name, 
                         ud.first_name, ud.last_name, ud.mobile_no, 
@@ -472,7 +484,7 @@ class UsersRepository extends Repository implements Pagination
     {
         $query = "SELECT 
                         u.id, u.user_types_id, u.user_details_id, u.email, 
-                        u.password_hash, u.validation_code, u.activated, 
+                        u.password_hash, u.validation_code, u.activated, u.activation_dtime,
                         ut.name user_types_name, ut.book_limit, ut.day_limit, ut.fine_per_day,
                         ug.id genders_id, ug.name genders_name, 
                         ud.first_name, ud.last_name, ud.mobile_no, 
