@@ -11,6 +11,7 @@ class User
     private $passwordHash;
     private $validation_code;
     private $activated;
+    private $activation_dtime;
 
     /**
      * User constructor.
@@ -22,7 +23,7 @@ class User
      * @param $validation_code
      * @param $activated
      */
-    public function __construct($id, UserType $user_type, UserDetails $user_details, $email, $password_hash, $validation_code, $activated)
+    public function __construct($id, UserType $user_type, UserDetails $user_details, $email, $password_hash, $validation_code, $activated, $activation_dtime=null)
     {
         $this->id = $id;
         $this->user_type = $user_type;
@@ -31,6 +32,7 @@ class User
         $this->passwordHash = $password_hash;
         $this->validation_code = $validation_code;
         $this->activated = $activated;
+        $this->activation_dtime = $activation_dtime;
     }
 
 
@@ -144,5 +146,21 @@ class User
     public function setActivated($activated)
     {
         $this->activated = $activated;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getActivationDatetime()
+    {
+        return $this->activation_dtime;
+    }
+
+    /**
+     * @param mixed $activation_dtime
+     */
+    public function setActivationDatetime($activation_dtime)
+    {
+        $this->activation_dtime = $activation_dtime;
     }
 }
