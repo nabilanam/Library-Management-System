@@ -86,6 +86,10 @@ function getToday(){
     return date('Y-m-d');
 }
 
+function getNow(){
+    return date('Y-m-d H:i:s');
+}
+
 /**
  * @param string $subtrahend
  * @param string $minuend
