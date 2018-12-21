@@ -128,7 +128,7 @@ function upload($file, $extensions, $max_size, $directory)
             if (false !== $ext = array_search($file_info->file($file['tmp_name']), $extensions, true)) {
                 $sha1 = sha1_file($file['tmp_name']);
                 $destination_path = sprintf($directory . DIRECTORY_SEPARATOR . "%s.%s", $sha1, $ext);
-                if (move_uploaded_file($file['tmp_name'], $destination_path)) {
+                if (file_exists($destination_path) || move_uploaded_file($file['tmp_name'], $destination_path)) {
                     return $sha1 . '.' . $ext;
                 }
             }
