@@ -153,6 +153,9 @@ if ((isset($_POST['save_member']) || isset($_POST['edit_member']))
 
         try {
             $details = $deatil_repo->update($details);
+            if ($details){
+                $user->setUserDetails($details);
+            }
             $user = $user_repo->update($user);
 
             if ($details || $user) {
