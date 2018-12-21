@@ -132,7 +132,7 @@ class UsersRepository extends Repository implements Pagination
 
         $query = "UPDATE $this->table 
                   SET user_types_id=:utype_id, user_details_id=:udetails_id, email=:email, 
-                  password_hash=:phash, validation_code=:vcode, activated=:activated, u.activation_dtime=:activation_dtime
+                  password_hash=:phash, validation_code=:vcode, activated=:activated, activation_dtime=:activation_dtime
                   WHERE id=:id";
         $result = $this->db->bindQuery($query, $data);
 
