@@ -13,7 +13,7 @@ if (!isAdmin()) {
     $total_pages = ceil($number_of_rows / $results_per_page);
     $first_result = ($current_page - 1) * $results_per_page;
 
-    $arr = $repo->getNonReturnedBooksByUserIdPaginated($id,$first_result,$results_per_page);
+    $arr = $repo->getNonReturnedBooksByUserIdPaginated(getUser()['id'],$first_result,$results_per_page);
     if (empty($arr)) {
         setAlert('You are clean!', 'success');
     }
