@@ -13,17 +13,17 @@ $st = new Statistics();
             <?php
             if (isAdmin()) {
                 printItem($st->totalBooks(), 'book', 'Total Books', APP_URL_BASE . '/books/browse.php');
-                printItem($st->totalUsers(), 'user', 'Total Users');
-                printItem($st->totalBooksBorrowed(), 'book', 'Total Books Borrowed');
-                printItem($st->totalPendingRequests(), 'bell', 'Total Pending Requests');
-                printItem($st->totalNonReturnedBooks(), 'book', 'Total Non Returned Books');
-                printItem($st->totalUsersActivatedThisMonth(), 'user', 'Total Users Registered This Month');
-                printItem($st->totalBooksBorrowedThisMonth(), 'book', 'Total Books Borrowed This Month');
+                printItem($st->totalUsers(), 'user', 'Total Users',APP_URL_BASE . '/members/browse.php');
+                printItem($st->totalBooksBorrowed(), 'book', 'Total Books Borrowed',APP_URL_BASE . '/books/browse.php');
+                printItem($st->totalPendingRequests(), 'bell', 'Total Pending Requests',APP_URL_BASE . '/requests');
+                printItem($st->totalNonReturnedBooks(), 'book', 'Total Non Returned Books',APP_URL_BASE.'/circulation/delays.php');
+                printItem($st->totalUsersActivatedThisMonth(), 'user', 'Total Users Registered This Month',APP_URL_BASE. '/members/browse.php');
+                printItem($st->totalBooksBorrowedThisMonth(), 'book', 'Total Books Borrowed This Month',APP_URL_BASE.'/circulation/history.php');
                 printItem($st->totalEmailsSentThisMonth(), 'mail', 'Total Emails Sent This Month', APP_URL_BASE . '/mail/history.php');
             } else {
-                printItem($st->totalBooksBorrowedByUser(), 'book', 'Total Books Borrowed', APP_URL_BASE . '/r/browse.php');
-                printItem($st->totalPendingRequestsByUser(), 'user', 'Total Pending Requests');
-                printItem($st->totalNonReturnedBooksByUser(), 'user', 'Total Non Returned Books');
+                printItem($st->totalBooksBorrowedByUser(), 'book', 'Total Books Borrowed', APP_URL_BASE . '/circulation/history.php');
+                printItem($st->totalPendingRequestsByUser(), 'user', 'Total Pending Requests',APP_URL_BASE . '/requests');
+                printItem($st->totalNonReturnedBooksByUser(), 'user', 'Total Non Returned Books',APP_URL_BASE.'/circulation/delays.php');
             }
             ?>
         </div>
