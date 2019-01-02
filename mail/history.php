@@ -30,7 +30,8 @@ $arr = $repo->getPaginated($first_result, $results_per_page);
             <th class="one wide">Date Time</th>
             <th class="one wide">Address</th>
             <th class="one wide">Subject</th>
-            <th class="one wide">Message</th>
+            <th class="two wide">Message</th>
+            <th class="one wide">Action</th>
         </tr>
         </thead>
         <tbody>
@@ -42,7 +43,8 @@ $arr = $repo->getPaginated($first_result, $results_per_page);
         <td>' . $mail->getDtime() . '</td>
         <td>' . $mail->getAddress() . '</td>
         <td>' . $mail->getSubject() . '</td>
-        <td>' . mb_strimwidth($mail->getMessage(),0,50, '...') . '</td>
+        <td>' . mb_strimwidth($mail->getMessage(),0,40, '...') . '</td>
+        <td><a class="ui blue basic button" href="'.APP_URL_BASE.'/mail/view.php?mail_id='.$mail->getId().'">View</a></td>
         </tr>';
         }
         echo $data;
