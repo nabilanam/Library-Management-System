@@ -42,7 +42,7 @@ $arr = $repo->getPaginated($first_result, $results_per_page);
         <td>' . $mail->getDtime() . '</td>
         <td>' . $mail->getAddress() . '</td>
         <td>' . $mail->getSubject() . '</td>
-        <td>' . mb_strimwidth($mail->getMessage(),0,20, '...') . '</td>
+        <td>' . mb_strimwidth($mail->getMessage(),0,50, '...') . '</td>
         </tr>';
         }
         echo $data;
@@ -50,4 +50,5 @@ $arr = $repo->getPaginated($first_result, $results_per_page);
         </tbody>
     </table>
 <?php
+printPagination($current_page,$total_pages,APP_URL_BASE.'/mail/history.php?');
 require_once __DIR__ . '/../templates/footer.php';
