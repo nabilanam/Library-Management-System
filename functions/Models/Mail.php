@@ -10,12 +10,15 @@ class Mail
 
     /**
      * Mail constructor.
+     * @param $id
      * @param $address
      * @param $subject
      * @param $message
+     * @param null $dtime
      */
     public function __construct($id ,$address, $subject, $message, $dtime=null)
     {
+        $this->id = $id;
         $this->address = $address;
         $this->subject = $subject;
         $this->message = $message;
