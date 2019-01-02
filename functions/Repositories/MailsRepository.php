@@ -40,9 +40,29 @@ class MailsRepository extends Repository implements Pagination
         // TODO: Implement removeById() method.
     }
 
-    public function findById($id_arr)
+    /**
+     * @param $id
+     * @return bool|Mail
+     */
+    public function findById($id)
     {
-        // TODO: Implement findById() method.
+        $data = [
+            'id'=>$id
+        ];
+        $query = "SELECT * FROM $this->table WHERE id=:id";
+        $result = $this->db->bindQuery($query, $data);
+        if ($result->rowCount() == 1) {
+            $row = $result->fetch(PDO::FETCH_ASSOC);
+            $mail = new Mail(
+                $row['id'],
+                $row['address'],
+                $row['subject'],
+                $row['message'],
+                $row['dtime']
+            );
+            return $mail;
+        }
+        return false;
     }
 
     public function update($mail)
