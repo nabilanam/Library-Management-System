@@ -210,7 +210,7 @@ function createRequest($req_repo, $book_repo, $book, $user, $status, $issue_date
             $message = 'Sorry! You already have reached maximum book limit ' . $user->getUserType()->getBookLimit() . ' !';
         }
         setAlert($message, 'danger');
-        redirectTo(APP_URL_BASE . '/requests');
+        redirectTo(APP_URL_BASE . '/circulation/history.php?user_id='.$user->getId());
     }
 
     $request = new Request(
