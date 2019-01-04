@@ -22,12 +22,12 @@ if (isAdmin()) {
     $total_pages = ceil($number_of_rows / $results_per_page);
     $first_result = ($current_page - 1) * $results_per_page;
 
-    $arr = $repo->findByUserIdPaginated(getUser()['id'], true,$first_result,$results_per_page);
+    $arr = $repo->findPendingsByUserIdPaginated(getUser()['id'], $first_result,$results_per_page);
 }
 
 alertBox();
 
-$data = '<div class="ui placeholder segment">
+$data = '<div class="row"><div class="ui placeholder segment">
 <table class="ui selectable celled table">
     <thead>
     <tr>
@@ -92,7 +92,7 @@ foreach ($arr as $request) {
                </tr>';
     }
 }
-echo $data . '</tbody></table></div>';
+echo $data . '</tbody></table></div></div>';
 
 if (!empty($arr)){
     printPagination($current_page,$total_pages,APP_URL_BASE.'/requests/index.php?');
