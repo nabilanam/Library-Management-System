@@ -191,4 +191,37 @@ if ((isset($_POST['save_member']) || isset($_POST['edit_member']))
     setAlert('Email address must be unique!', 'danger');
     redirectTo($redirect_url);
 
+} elseif (isset($_POST['delete_id']) && isAdmin()) {
+    $id = $_POST['delete_id'];
+
+    if ($page_title === 'Browse Members') {
+        $redirect_url = APP_URL_BASE . '/members/browse.php';
+    } else {
+        $redirect_url = APP_URL_BASE . '/members/search.php';
+    }
+
+    $db = Database::getInstance();
+    $db->beginTransaction();
+
+    $users_repo = new UsersRepository();
+    $details_repo = new UserDetailsRepository();
+    $user = $users_repo->findById($id);
+
+    try {
+        if ($user) {
+            if ($users_repo->removeById($id)) {
+                if ($details_repo->removeById($user->getUserDetails()->getId())) {
+                    $db->commit();
+                    setAlert('Success!', 'success');
+                    redirectTo($redirect_url);
+                }
+                $db->rollback();
+            }
+        }
+    } catch (Exception $e) {
+        $db->rollback();
+    }
+
+    setAlert('Sorry only members without circulation history can be deleted!', 'danger');
+    redirectTo($redirect_url);
 }

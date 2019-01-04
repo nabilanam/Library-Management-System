@@ -7,34 +7,7 @@ require_once '../functions/Models/UserDetails.php';
 require_once '../functions/Repositories/UsersRepository.php';
 require_once '../functions/Repositories/SimpleRepositoryFacade.php';
 
-/* @var User $user */
-if (isset($_POST['delete_id']) && isAdmin()) {
-    $id = $_POST['delete_id'];
-
-    $db = Database::getInstance();
-    $db->beginTransaction();
-
-    $users_repo = new UsersRepository();
-    $details_repo = new UserDetailsRepository();
-    $user = $users_repo->findById($id);
-    try {
-        if ($user) {
-            if ($users_repo->removeById($id)) {
-                if ($details_repo->removeById($user->getUserDetails()->getId())) {
-                    $db->commit();
-                    redirectTo(APP_URL_BASE . '/members/browse.php');
-                }
-                $db->rollback();
-            }
-            setAlert('Sorry only new members can be deleted!', 'danger');
-        }
-    } catch (Exception $e) {
-        $db->rollback();
-        setAlert('Sorry only members without circulation history can be deleted!', 'danger');
-    }
-}
 alertBox();
-
 
 $repo = new UsersRepository();
 
