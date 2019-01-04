@@ -8,15 +8,15 @@ function printMemberTable($arr)
     $data = '<table class="ui selectable celled table">
         <thead>
         <tr>
-            <td class="one wide">ID</td>
-            <td class="one wide">First Name</td>
-            <td class="one wide">Last Name</td>
-            <td class="one wide">User Type</td>
-            <td class="one wide">Email</td>
-            <td class="one wide">Mobile</td>
-            <td class="one wide">Present Address</td>
-            <td class="one wide">Permanent Address</td>
-            <td class="one wide">Action</td>
+            <th class="one wide">ID</th>
+            <th class="one wide">First Name</th>
+            <th class="one wide">Last Name</th>
+            <th class="one wide">User Type</th>
+            <th class="one wide">Email</th>
+            <th class="one wide">Mobile</th>
+            <th class="one wide">Present Address</th>
+            <th class="one wide">Permanent Address</th>
+            <th class="one wide">Action</th>
         </tr>
         </thead>
         <tbody>';

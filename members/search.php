@@ -57,7 +57,7 @@ if (isset($_GET['query']) && isset($_GET['option'])) {
         <form class="ui form" method="GET" action="search.php">
             <div class="inline fields">
                 <div class="field">
-                    <label for="query">Search by</label>
+                    <label for="query">User Type</label>
                     <select name="option" id="option">
                         <option value="1">All</option>
                         <option value="2">Personal</option>
