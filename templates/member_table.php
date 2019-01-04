@@ -4,7 +4,6 @@ require_once '../templates/modal.php';
 function printMemberTable($arr)
 {
     modal('Delete Member', 'Are you sure you want to delete this member?');
-
     $data = '<table class="ui selectable celled table">
         <thead>
         <tr>
@@ -37,15 +36,14 @@ function printMemberTable($arr)
 
         if ($user->getUserType()->getId() != 1) {
             $data .= '<a class="ui blue basic button" href="' . APP_URL_BASE . '/members/edit.php?member_id=' . $user->getId() . '">Edit</a>
-                       <form id="delete_form" action="" method="POST">
+                       <form id="delete_form" action="../functions/Validators/MemberValidator.php" method="POST">
                           <input type="hidden" name="delete_id" value="' . $user->getId() . '">
                           <a class="ui red basic button" href="#" role="button" 
                           onclick="$(\'.mini.modal\')
                           .modal({
                                 closable  : true,
                                 onApprove : function() {
-                                    $(\'#delete_form\').submit();
-                                    return true;
+                                    return $(\'#delete_form\').submit();
                                 }})
                           .modal(\'show\')">Delete</a>
                        </form>';
