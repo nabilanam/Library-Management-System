@@ -15,7 +15,7 @@ if (!empty($mail)) {
             <table class="ui padded selectable celled center aligned striped table">
                 <tbody>
                 <tr>
-                    <th class="three wide">ID :</th>
+                    <th class="three wide">Mail ID :</th>
                     <td class="six wide"><?php echo $mail->getId(); ?></td>
                 </tr>
                 <tr>
