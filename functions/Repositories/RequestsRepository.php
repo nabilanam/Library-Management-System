@@ -143,6 +143,37 @@ class RequestsRepository extends Repository implements Pagination
         return $arr;
     }
 
+
+    /**
+     * @return Request[]
+     */
+    public function findPendingsByUserIdPaginated($user_id, $to, $limit)
+    {
+        $data = [
+            'users_id' => $user_id,
+            'status_id' => Status::PENDING
+        ];
+        $query = "SELECT requests.id, books_id, users_id, request_status_id, 
+                    request_date, issue_date, return_date, receive_date, total_fine, user_read,
+                    rs.id status_id, rs.name status_name
+                    FROM $this->table
+                    INNER JOIN request_status rs on $this->table.request_status_id = rs.id
+                    WHERE request_status_id =:status_id AND users_id=:users_id
+                    ORDER BY requests.id DESC
+                    LIMIT $to, $limit";
+
+        $result = $this->db->bindQuery($query, $data);
+        $arr = [];
+        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+            $user = $this->users_repo->findById($row['users_id']);
+            $book = $this->books_repo->findById($row['books_id']);
+            $status = new DTO($row['status_id'], $row['status_name']);
+            $request = new Request($row['id'], $book, $user, $status, $row['request_date'], $row['issue_date'], $row['return_date'], $row['receive_date'], $row['total_fine'], $row['user_read']);
+            $arr[] = $request;
+        }
+        return $arr;
+    }
+
     /**
      * @param Request $request
      * @return Request|bool
