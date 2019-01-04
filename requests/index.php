@@ -1,5 +1,5 @@
 <?php
-$page_title = 'Notifications';
+$page_title = 'Requests';
 require_once '../functions/Enums/Status.php';
 require_once '../functions/Repositories/BooksRepository.php';
 require_once '../functions/Repositories/RequestsRepository.php';
