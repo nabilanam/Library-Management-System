@@ -116,32 +116,41 @@ function printPagination($current_page, $total_pages, $url)
 {
     $span = 2;
     $items = '<div class="ui pagination menu">';
+
     if ($total_pages > 1 && $current_page <= $total_pages) {
-        if (1 == $current_page){
-            $items = $items . '<a class="item active" href="'.$url.'page=1">1</a>';
-        } else{
-            $items = $items . '<a class="item" href="'.$url.'page=1">1</a>';
+
+        if (1 == $current_page) {
+            $items .= '<a class="item active" href="' . $url . 'page=1">1</a>';
+        } else {
+            $items .= '<a class="item" href="' . $url . 'page=1">1</a>';
         }
+
         $i = max(2, $current_page - $span);
+
         if ($i > 2)
-            $items = $items . '<div class="item"> ... </div>';
+            $items .= '<div class="item"> ... </div>';
+
         for (; $i < min($current_page + $span + 1, $total_pages); $i++) {
-            if ($i == $current_page){
-                $items = $items . '<a class="item active" href="'.$url.'page='.$i.'">'.$i.'</a>';
-            } else{
-                $items = $items . '<a class="item" href="'.$url.'page='.$i.'">'.$i.'</a>';
+            if ($i == $current_page) {
+                $items .= '<a class="item active" href="' . $url . 'page=' . $i . '">' . $i . '</a>';
+            } else {
+                $items .= '<a class="item" href="' . $url . 'page=' . $i . '">' . $i . '</a>';
             }
         }
+
         if ($i != $total_pages)
-            $items = $items . '<div class="item"> ... </div>';
-        if ($total_pages == $current_page){
-            $items = $items . '<a class="item active" href="'.$url.'page='.$total_pages.'">'.$total_pages.'</a></div>';
-        }else{
-            $items = $items . '<a class="item" href="'.$url.'page='.$total_pages.'">'.$total_pages.'</a></div>';
+            $items .= '<div class="item"> ... </div>';
+
+        if ($total_pages == $current_page) {
+            $items .= '<a class="item active" href="' . $url . 'page=' . $total_pages . '">' . $total_pages . '</a></div>';
+        } else {
+            $items .= '<a class="item" href="' . $url . 'page=' . $total_pages . '">' . $total_pages . '</a></div>';
         }
-    }elseif($total_pages == 1){
-        $items = $items . '<a class="item active" href="'.$url.'page='.$total_pages.'">'.$total_pages.'</a></div>';
+
+    } elseif ($total_pages == 1) {
+        $items .= '<a class="item active" href="' . $url . 'page=' . $total_pages . '">' . $total_pages . '</a></div>';
     }
+
     echo $items;
 }
 
