@@ -67,19 +67,19 @@ alertBox();
     <table class="ui selectable celled table">
         <thead>
         <tr>
-            <td class="one wide">Req ID</td>
+            <th class="one wide">Req ID</th>
             <?php if (isAdmin()) { ?>
-                <td class="one wide">User ID</td>
-                <td class="one wide">User Name</td>
+                <th class="one wide">User ID</th>
+                <th class="one wide">User Name</th>
             <?php } ?>
-            <td class="one wide">Book ID</td>
-            <td class="one wide">Book Title</td>
-            <td class="one wide">Issue Date</td>
-            <td class="one wide">Return Date</td>
-            <td class="one wide">Status</td>
-            <td class="one wide">Fine</td>
+            <th class="one wide">Book ID</th>
+            <th class="one wide">Book Title</th>
+            <th class="one wide">Issue Date</th>
+            <th class="one wide">Return Date</th>
+            <th class="one wide">Status</th>
+            <th class="one wide">Fine</th>
             <?php if (isAdmin()) { ?>
-                <td class="one wide">Action</td>
+                <th class="one wide">Action</th>
             <?php } ?>
         </tr>
         </thead>
