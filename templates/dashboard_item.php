@@ -19,7 +19,7 @@ function printItem($header, $icon, $subheader, $link='#'){
                     </div>
 
                     <div class="ui bottom attached label">
-                        <a href="'.$link.'">Sea all <i class="icon arrow right"></i></a>
+                        <a href="'.$link.'">See all <i class="icon arrow right"></i></a>
                     </div>
                 </div>
             </div>';
