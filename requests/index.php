@@ -31,25 +31,24 @@ $data = '<div class="row"><div class="ui placeholder segment">
 <table class="ui selectable celled table">
     <thead>
     <tr>
-        <td class="one wide">ID</td>
-        <td class="one wide">Book Title</td>
-        <td class="one wide">Available Copies</td>';
+        <th class="one wide">ID</th>
+        <th class="one wide">Book Title</th>
+        <th class="one wide">Available Copies</th>';
 if (isAdmin()) {
-    $data = $data . '<td class="one wide">User ID</td>
-                     <td class="one wide">User Name</td>';
+    $data .= '<th class="one wide">User ID</th>
+                     <th class="one wide">User Name</th>';
 }
-$data = $data . '<td class="one wide">Status</td>
-        <td class="one wide">Request Date</td>
-        <td class="one wide">Issue Date</td>
-        <td class="one wide">Return Date</td>
-        <td class="one wide">Action</td>
+$data .= '<th class="one wide">Status</th>
+        <th class="one wide">Request Date</th>
+        <th class="one wide">Issue Date</th>
+        <th class="one wide">Return Date</th>
+        <th class="one wide">Action</th>
     </tr>
     </thead>
     <tbody>';
 foreach ($arr as $request) {
     if (isAdmin()) {
-        $data = $data
-            . '<tr>
+        $data .= '<tr>
                   <form action="../functions/Validators/RequestValidator.php" method="POST">
                     <td>' . $request->getId() . '</td>
                     <td>' . $request->getBook()->getTitle() . '</td>
@@ -70,8 +69,7 @@ foreach ($arr as $request) {
                   </form>
                </tr>';
     } elseif (!isAdmin() && $request->getUserRead() == 0) {
-        $data = $data
-            . '<tr>
+        $data .= '<tr>
                    <form action="../functions/Validators/RequestValidator.php" method="POST">
                        <td>' . $request->getId() . '</td>
                        <td>' . $request->getBook()->getTitle() . '</td>
