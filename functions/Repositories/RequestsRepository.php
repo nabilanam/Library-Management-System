@@ -231,14 +231,18 @@ class RequestsRepository extends Repository implements Pagination
      */
     public function getNonReturnedBooksByUserIdPaginated($id, $to, $limit)
     {
+        $data = [
+            'id' => $id,
+            'status_id' => Status::APPROVED
+        ];
         $query = "SELECT requests.id, books_id, users_id, request_status_id, 
                     request_date, issue_date, return_date, receive_date, total_fine, user_read,
                     rs.id status_id, rs.name status_name
                     FROM $this->table
                     INNER JOIN request_status rs on $this->table.request_status_id = rs.id
-                    WHERE users_id=:id AND return_date < CURDATE() 
+                    WHERE users_id=:id AND request_status_id =:status_id AND return_date < CURDATE() 
                     LIMIT $to, $limit";
-        $result = $this->db->bindQuery($query, ['id' => $id]);
+        $result = $this->db->bindQuery($query, $data);
         $arr = [];
         while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
             $user = $this->users_repo->findById($row['users_id']);
