@@ -26,34 +26,6 @@ if (isset($page_title)) {
         case 'Add Book':
             echo '<script src="' . APP_ASSETS_JS . '/books_add.js"></script>';
             break;
-        case 'Browse Books':
-            echo '
-            <script src="' . APP_ASSETS_JS . '/data_table_config.js"></script>
-            <script src="' . APP_ASSETS_JS . '/jquery.dataTables.min.js"></script>
-            <script src="' . APP_ASSETS_JS . '/dataTables.semanticui.min.js"></script>
-            ';
-            break;
-        case 'Books by Category':
-            echo '
-            <script src="' . APP_ASSETS_JS . '/data_table_config.js"></script>
-            <script src="' . APP_ASSETS_JS . '/jquery.dataTables.min.js"></script>
-            <script src="' . APP_ASSETS_JS . '/dataTables.semanticui.min.js"></script>
-            ';
-            break;
-        case 'Books by Shelf':
-            echo '
-            <script src="' . APP_ASSETS_JS . '/data_table_config.js"></script>
-            <script src="' . APP_ASSETS_JS . '/jquery.dataTables.min.js"></script>
-            <script src="' . APP_ASSETS_JS . '/dataTables.semanticui.min.js"></script>
-            ';
-            break;
-        case 'Search Books':
-            echo '
-            <script src="' . APP_ASSETS_JS . '/data_table_config.js"></script>
-            <script src="' . APP_ASSETS_JS . '/jquery.dataTables.min.js"></script>
-            <script src="' . APP_ASSETS_JS . '/dataTables.semanticui.min.js"></script>
-            ';
-            break;
         case 'Book Edit':
             echo '<script src="' . APP_ASSETS_JS . '/books_edit.js"></script>';
             break;
@@ -63,13 +35,6 @@ if (isset($page_title)) {
         case 'Edit Member':
             echo '<script src="' . APP_ASSETS_JS . '/members_edit.js"></script>';
             break;
-        case 'Browse Members':
-            echo '
-            <script src="' . APP_ASSETS_JS . '/data_table_config.js"></script>
-            <script src="' . APP_ASSETS_JS . '/jquery.dataTables.min.js"></script>
-            <script src="' . APP_ASSETS_JS . '/dataTables.semanticui.min.js"></script>
-            ';
-            break;
         case 'Confirm Password':
             echo '<script src="' . APP_ASSETS_JS . '/confirm_password.js"></script>';
             break;
@@ -77,10 +42,7 @@ if (isset($page_title)) {
             echo '<script src="' . APP_ASSETS_JS . '/institutes_add.js"></script>';
             break;
         case 'Browse Institute':
-            echo '<script src="' . APP_ASSETS_JS . '/institutes_add.js"></script>
-            <script src="' . APP_ASSETS_JS . '/data_table_config.js"></script>
-            <script src="' . APP_ASSETS_JS . '/jquery.dataTables.min.js"></script>
-            <script src="' . APP_ASSETS_JS . '/dataTables.semanticui.min.js"></script>';
+            echo '<script src="' . APP_ASSETS_JS . '/institutes_add.js"></script>';
             break;
         case 'Edit Institute':
             echo '<script src="' . APP_ASSETS_JS . '/institutes_edit.js"></script>';
