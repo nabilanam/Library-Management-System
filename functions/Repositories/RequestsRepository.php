@@ -143,6 +143,65 @@ class RequestsRepository extends Repository implements Pagination
         return $arr;
     }
 
+    /**
+     * Finds requests by user id (eager loading)
+     * @param $book_id
+     * @param $to
+     * @param $limit
+     * @return Request[]
+     */
+    public function findByBookIdPaginated($book_id, $to, $limit)
+    {
+        $query = "SELECT requests.id, books_id, users_id, request_status_id, 
+                    request_date, issue_date, return_date, receive_date, total_fine, user_read,
+                    rs.id status_id, rs.name status_name
+                    FROM requests
+                    INNER JOIN request_status rs on request_status_id = rs.id
+                    WHERE books_id=:id 
+                    ORDER BY requests.id DESC LIMIT $to, $limit";
+        $result = $this->db->bindQuery($query, ['id' => $book_id]);
+        $arr = [];
+        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+            $user = $this->users_repo->findById($row['users_id']);
+            $book = $this->books_repo->findById($row['books_id']);
+            $status = new DTO($row['status_id'], $row['status_name']);
+            $request = new Request($row['id'], $book, $user, $status, $row['request_date'], $row['issue_date'], $row['return_date'], $row['receive_date'], $row['total_fine'], $row['user_read']);
+            $arr[] = $request;
+        }
+        return $arr;
+    }
+
+    /**
+     * Finds requests by user id (eager loading)
+     * @param $name
+     * @param $to
+     * @param $limit
+     * @return Request[]
+     */
+    public function findByUserNamePaginated($name, $to, $limit)
+    {
+        $query = "SELECT requests.id, books_id, users_id, request_status_id, 
+                    request_date, issue_date, return_date, receive_date, total_fine, user_read,
+                    rs.id status_id, rs.name status_name
+                    FROM requests
+                    INNER JOIN request_status rs on requests.request_status_id = rs.id
+                    INNER JOIN users u on users_id = u.id
+                    INNER JOIN user_details detail on u.user_details_id = detail.id
+                    WHERE CONCAT(detail.first_name, ' ', detail.last_name) LIKE '%$name%'
+                    ORDER BY detail.first_name, id 
+                    LIMIT $to, $limit";
+        $result = $this->db->query($query);
+        $arr = [];
+        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+            $user = $this->users_repo->findById($row['users_id']);
+            $book = $this->books_repo->findById($row['books_id']);
+            $status = new DTO($row['status_id'], $row['status_name']);
+            $request = new Request($row['id'], $book, $user, $status, $row['request_date'], $row['issue_date'], $row['return_date'], $row['receive_date'], $row['total_fine'], $row['user_read']);
+            $arr[] = $request;
+        }
+        return $arr;
+    }
+
 
     /**
      * @return Request[]
@@ -163,6 +222,58 @@ class RequestsRepository extends Repository implements Pagination
                     LIMIT $to, $limit";
 
         $result = $this->db->bindQuery($query, $data);
+        $arr = [];
+        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+            $user = $this->users_repo->findById($row['users_id']);
+            $book = $this->books_repo->findById($row['books_id']);
+            $status = new DTO($row['status_id'], $row['status_name']);
+            $request = new Request($row['id'], $book, $user, $status, $row['request_date'], $row['issue_date'], $row['return_date'], $row['receive_date'], $row['total_fine'], $row['user_read']);
+            $arr[] = $request;
+        }
+        return $arr;
+    }
+
+    /**
+     * @return Request[]
+     */
+    public function findByBookTitlePaginated($title, $to, $limit)
+    {
+        $query = "SELECT requests.id, books_id, users_id, request_status_id, 
+                    request_date, issue_date, return_date, receive_date, total_fine, user_read,
+                    rs.id status_id, rs.name status_name
+                    FROM requests
+                    INNER JOIN request_status rs on request_status_id = rs.id
+                    INNER JOIN books bk on books_id = bk.id
+                    WHERE bk.title LIKE '%$title%'
+                    LIMIT $to, $limit";
+
+        $result = $this->db->query($query);
+        $arr = [];
+        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+            $user = $this->users_repo->findById($row['users_id']);
+            $book = $this->books_repo->findById($row['books_id']);
+            $status = new DTO($row['status_id'], $row['status_name']);
+            $request = new Request($row['id'], $book, $user, $status, $row['request_date'], $row['issue_date'], $row['return_date'], $row['receive_date'], $row['total_fine'], $row['user_read']);
+            $arr[] = $request;
+        }
+        return $arr;
+    }
+
+    /**
+     * @return Request[]
+     */
+    public function findByBookTitleForUserIdPaginated($user_id, $title, $to, $limit)
+    {
+        $query = "SELECT requests.id, books_id, users_id, request_status_id, 
+                    request_date, issue_date, return_date, receive_date, total_fine, user_read,
+                    rs.id status_id, rs.name status_name
+                    FROM requests
+                    INNER JOIN request_status rs on request_status_id = rs.id
+                    INNER JOIN books bk on books_id = bk.id
+                    WHERE users_id=$user_id AND bk.title LIKE '%$title%'
+                    LIMIT $to, $limit";
+
+        $result = $this->db->query($query);
         $arr = [];
         while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
             $user = $this->users_repo->findById($row['users_id']);
@@ -333,7 +444,7 @@ class RequestsRepository extends Repository implements Pagination
         return $arr;
     }
 
-    public function totalBooksByUserId($user_id)
+    public function totalRequestsByUserId($user_id)
     {
         $data = [
             'user_id' => $user_id
@@ -341,6 +452,28 @@ class RequestsRepository extends Repository implements Pagination
         $query = "SELECT COUNT(*) FROM requests
                   WHERE users_id=:user_id";
         $result = $this->db->bindQuery($query, $data);
+        return $result->fetchColumn();
+    }
+
+    public function totalRequestsByBookId($book_id)
+    {
+        $data = [
+            'books_id' => $book_id
+        ];
+        $query = "SELECT COUNT(*) FROM requests
+                  WHERE books_id=:books_id";
+        $result = $this->db->bindQuery($query, $data);
+        return $result->fetchColumn();
+    }
+
+    public function totalRequestsByUserName($name)
+    {
+        $query = "SELECT COUNT(*) FROM requests
+                  INNER JOIN users u on requests.users_id = u.id
+                  INNER JOIN user_details detail on u.user_details_id = detail.id
+                  WHERE CONCAT(detail.first_name, ' ' ,detail.last_name) LIKE '%$name%'
+                  ORDER BY detail.first_name, u.id";
+        $result = $this->db->query($query);
         return $result->fetchColumn();
     }
 
@@ -435,6 +568,24 @@ class RequestsRepository extends Repository implements Pagination
                   OR request_status_id=:returned 
                   OR request_status_id=:lost)";
         $result = $this->db->bindQuery($query, $data);
+        return $result->fetchColumn();
+    }
+
+    public function totalRequestsByBookTitle($title)
+    {
+        $query = "SELECT COUNT(*) FROM requests 
+                  INNER JOIN books ON books_id = books.id
+                  WHERE books.title LIKE '%$title%'";
+        $result = $this->db->query($query);
+        return $result->fetchColumn();
+    }
+
+    public function totalRequestsByBookTitleForUserId($user_id, $title)
+    {
+        $query = "SELECT COUNT(*) FROM requests 
+                  INNER JOIN books ON books_id = books.id
+                  WHERE users_id=:users_id AND books.title LIKE '%$title%'";
+        $result = $this->db->bindQuery($query,['users_id'=>$user_id]);
         return $result->fetchColumn();
     }
 }
