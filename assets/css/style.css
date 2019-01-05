@@ -12,6 +12,6 @@ html,body{
 	width: auto;
 }
 
-.ui.segment{
-	padding-bottom: 0;
+.ui.segment > .ui.form > .inline.fields {
+	margin: 0;
 }
