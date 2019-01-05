@@ -10,11 +10,6 @@ redirectIfNotLoggedIn();
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.3/semantic.min.css">
-    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.11/summernote.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.9/summernote-bs4.css">
-
-    <link rel="stylesheet" href="../assets/css/jquery.dataTables.min.css">
-    <link rel="stylesheet" href="../assets/css/dataTables.semanticui.min.css">
     <link rel="stylesheet" type="text/css" href="../assets/css/style.css">
 
 </head>
