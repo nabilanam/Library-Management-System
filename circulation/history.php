@@ -4,65 +4,97 @@ require_once '../functions/Repositories/UsersRepository.php';
 require_once '../functions/Repositories/RequestsRepository.php';
 require_once '../templates/navbar.php';
 
-$user_repo = new UsersRepository();
+$url = APP_URL_BASE . '/circulation/history.php?';
 $req_repo = new RequestsRepository();
 
-if (isAdmin()) {
-    ?>
-    <div class="row">
-        <form class="four wide column" method="get">
-            <select id="user_id" name="user_id" class="ui search fluid dropdown" onchange="this.form.submit()">
-                <?php
-                $arr = $user_repo->getAllIds();
-                $options = '';
-                foreach ($arr as $id) {
-                    if ($id == 1) {
-                        continue;
-                    } else if (isset($_GET['user_id']) && $_GET['user_id'] == $id) {
-                        $options = $options . '<option selected value="' . $id . '">' . $id . '</option>';
-                    } else {
-                        $options = $options . '<option value="' . $id . '">' . $id . '</option>';
-                    }
-                }
-                echo $options;
-                unset($arr);
-                ?>
-            </select>
-        </form>
-    </div>
-    <?php
-}
-
-
-$url = APP_URL_BASE . '/circulation/history.php?';
 $current_page = isset($_GET['page']) && is_numeric($_GET['page']) ? $_GET['page'] : 1;
 $limit = 5;
 
-if (isAdmin() && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
+if (isAdmin()) {
 
-    $total_pages = ceil($req_repo->totalBooksByUserId($_GET['user_id']) / $limit);
-    $to = ($current_page - 1) * $limit;
+    $query = isset($_GET['query']) ? $_GET['query'] : '';
+    $query_type = isset($_GET['type']) ? $_GET['type'] : '';
 
-    $url = $url . 'user_id=' . $_GET['user_id'] . '&';
-    $arr = $req_repo->findByUserIdPaginated($_GET['user_id'], false, $to, $limit);
-
-} elseif (isAdmin()) {
-
-    $total_pages = ceil($req_repo->totalRecords() / $limit);
-    $to = ($current_page - 1) * $limit;
-
-    $arr = $req_repo->getPaginated($to, $limit);
+    switch ($query_type) {
+        case '1':
+            $total_pages = ceil($req_repo->totalRequestsByUserId($query) / $limit);
+            $to = ($current_page - 1) * $limit;
+            $url = $url . 'type=' . $query_type . '&query=' . $query . '&';
+            $arr = $req_repo->findByUserIdPaginated($query, false, $to, $limit);
+            break;
+        case '2':
+            $total_pages = ceil($req_repo->totalRequestsByBookId($query) / $limit);
+            $to = ($current_page - 1) * $limit;
+            $url = $url . 'type=' . $query_type . '&query=' . $query . '&';
+            $arr = $req_repo->findByBookIdPaginated($query, $to, $limit);
+            break;
+        case '3':
+            $total_pages = ceil($req_repo->totalRequestsByUserName($query) / $limit);
+            $to = ($current_page - 1) * $limit;
+            $url = $url . 'type=' . $query_type . '&query=' . $query . '&';
+            $arr = $req_repo->findByUserNamePaginated($query, $to, $limit);
+            break;
+        case '4':
+            $total_pages = ceil($req_repo->totalRequestsByBookTitle($query) / $limit);
+            $to = ($current_page - 1) * $limit;
+            $url = $url . 'type=' . $query_type . '&query=' . $query . '&';
+            $arr = $req_repo->findByBookTitlePaginated($query, $to, $limit);
+            break;
+        default:
+            $total_pages = ceil($req_repo->totalRecords() / $limit);
+            $to = ($current_page - 1) * $limit;
+            $arr = $req_repo->getPaginated($to, $limit);
+            break;
+    }
 
 } elseif (!isAdmin()) {
+    $query = isset($_GET['query']) ? $_GET['query'] : '';
+    $query_type = isset($_GET['type']) ? $_GET['type'] : '';
 
-    $total_pages = ceil($req_repo->totalBooksByUserId(getUser()['id']) / $limit);
-    $to = ($current_page - 1) * $limit;
-
-    $arr = $req_repo->findByUserIdPaginated(getUser()['id'], false, $to, $limit);
+    switch ($query_type){
+        case '4':
+            $total_pages = ceil($req_repo->totalRequestsByBookTitleForUserId(getUser()['id'], $query) / $limit);
+            $to = ($current_page - 1) * $limit;
+            $url = $url . 'type=' . $query_type . '&query=' . $query . '&';
+            $arr = $req_repo->findByBookTitleForUserIdPaginated(getUser()['id'], $query, $to, $limit);
+            break;
+        default:
+            $total_pages = ceil($req_repo->totalRequestsByUserId(getUser()['id']) / $limit);
+            $to = ($current_page - 1) * $limit;
+            $arr = $req_repo->findByUserIdPaginated(getUser()['id'], false, $to, $limit);
+            break;
+    }
 }
-
-alertBox();
 ?>
+    <div class="row">
+        <?php alertBox(); ?>
+    </div>
+
+    <div class="ui segment">
+        <form class="ui form" method="get" action="">
+            <div class="inline fields">
+                <div class="field">
+                    <label for="option">Type</label>
+                    <select name="type" id="option">
+                        <?php
+                        if (isAdmin()) {
+                            echo '<option value="1">User ID</option>
+                                  <option value="2">Book ID</option>
+                                  <option value="3">User Name</option>';
+                        }
+                        ?>
+                        <option value="4">Book Title</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <input type="text" name="query" id="query" placeholder="Search item">
+                </div>
+                <div class="field">
+                    <button type="submit" class="ui blue button">Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
 
     <table class="ui selectable celled table">
         <thead>
