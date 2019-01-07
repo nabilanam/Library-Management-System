@@ -388,6 +388,28 @@ class RequestsRepository extends Repository implements Pagination
         }
         return $arr;
     }
+    /**
+     * @return Request[]
+     */
+    public function getRequestsWhereReturnDateExpiredToday()
+    {
+        $query = "SELECT requests.id, books_id, users_id, request_status_id, 
+                    request_date, issue_date, return_date, receive_date, total_fine, user_read,
+                    rs.id status_id, rs.name status_name
+                    FROM $this->table
+                    INNER JOIN request_status rs on $this->table.request_status_id = rs.id
+                    WHERE rs.id =:status_id AND return_date + 1 = CURDATE()";
+        $result = $this->db->bindQuery($query,['status_id'=>Status::APPROVED]);
+        $arr = [];
+        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+            $user = $this->users_repo->findById($row['users_id']);
+            $book = $this->books_repo->findById($row['books_id']);
+            $status = new DTO($row['status_id'], $row['status_name']);
+            $request = new Request($row['id'], $book, $user, $status, $row['request_date'], $row['issue_date'], $row['return_date'], $row['receive_date'], $row['total_fine'], $row['user_read']);
+            $arr[] = $request;
+        }
+        return $arr;
+    }
 
     /**
      * @param $to
