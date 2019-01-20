@@ -8,6 +8,7 @@ require_once __DIR__ . '/../../functions/Repositories/RequestsRepository.php';
  * only for windows
  */
 
+
 if (!empty($argv) && $argv[1] == 'scheduler') {
     $mailer = new Mailer();
     $repo = new RequestsRepository();
@@ -38,14 +39,35 @@ if (!empty($argv) && $argv[1] == 'scheduler') {
             echo $mail->getAddress() . ' failure';
         }
     }
-} else {
-    $cmd = 'schtasks /create /tn "LMS Mail Alert Task" /tr "php ' . __FILE__ . ' scheduler" /sc DAILY /st 00:00';
-    exec($cmd, $output, $return_var);
+}
 
-//    echo "<pre>";
-//    print_r([
-//        'output' => $output,
-//        'return_var' => $return_var
-//    ]);
-//    echo "</pre>";
+class MailAlertTask
+{
+    private $name = "LMSMailTask";
+
+    public function create()
+    {
+        $cmd = 'schtasks /create /tn ' . $this->name . ' /tr "php ' . __FILE__ . ' scheduler" /sc DAILY /st 00:00';
+        exec($cmd, $output, $return_var);
+        if (strpos($output[0],'SUCCESS:') === 0){
+            return true;
+        }
+        if (strpos($output[0],'WARNING:') === 0){
+            return true;
+        }
+        return false;
+    }
+
+    public function delete()
+    {
+        $cmd = 'schtasks /delete /f /tn ' . $this->name;
+        exec($cmd, $output, $return_var);
+    }
+
+    public function exists()
+    {
+        $cmd = 'schtasks /query /tn ' . $this->name;
+        exec($cmd, $output, $return_var);
+        return $return_var === 0;
+    }
 }
