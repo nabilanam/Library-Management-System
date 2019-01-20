@@ -48,10 +48,11 @@ function getHashedPassword($password)
     return password_hash($password, PASSWORD_DEFAULT);
 }
 
-/**
- * @param $message
- * @param $type
- */
+function isWindowsOS()
+{
+    return strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+}
+
 function setAlert($message, $type)
 {
     if ($type == 'success') $type = 'positive';
