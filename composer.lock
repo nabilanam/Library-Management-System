@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4d33d7f4f5df4f7d2c09573e71515d1f",
+    "content-hash": "b08d049a4e548f39373099ed1f40d6a4",
     "packages": [
         {
             "name": "phpmailer/phpmailer",
-            "version": "v6.0.5",
+            "version": "v6.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPMailer/PHPMailer.git",
-                "reference": "cb3ea134d4d3729e7857737d5f320cce9caf4d32"
+                "reference": "8190d73eb5def11a43cfb020b7f36db65330698c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/cb3ea134d4d3729e7857737d5f320cce9caf4d32",
-                "reference": "cb3ea134d4d3729e7857737d5f320cce9caf4d32",
+                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/8190d73eb5def11a43cfb020b7f36db65330698c",
+                "reference": "8190d73eb5def11a43cfb020b7f36db65330698c",
                 "shasum": ""
             },
             "require": {
@@ -70,7 +70,7 @@
                 }
             ],
             "description": "PHPMailer is a full-featured email creation and transfer class for PHP",
-            "time": "2018-03-27T13:49:45+00:00"
+            "time": "2018-11-16T00:41:32+00:00"
         }
     ],
     "packages-dev": [],
@@ -80,7 +80,13 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "ext-mysqli": "*"
+        "ext-mysqli": "*",
+        "ext-pdo": "*",
+        "ext-fileinfo": "*",
+        "ext-ctype": "*",
+        "ext-json": "*",
+        "ext-spltype": "*",
+        "ext-mbstring": "*"
     },
     "platform-dev": []
 }
